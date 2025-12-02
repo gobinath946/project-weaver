@@ -202,10 +202,10 @@ const RegisterCompany = () => {
     // Validate timezone and currency
     if (!formData.timezone || !formData.currency) {
       setError(
-        "Timezone and currency are required. Please select an address from suggestions."
+        "Timezone and currency are required. Please enter manually or select from address suggestions."
       );
       toast.error(
-        "Please select an address from suggestions to auto-fill timezone and currency"
+        "Please enter timezone and currency manually or select from address suggestions"
       );
       return;
     }
@@ -413,10 +413,8 @@ const RegisterCompany = () => {
                     id="city"
                     value={formData.city}
                     onChange={(e) => handleInputChange("city", e.target.value)}
-                    placeholder="City"
+                    placeholder="Enter city or auto-fill"
                     required
-                    readOnly
-                    className="bg-gray-50"
                   />
                 </div>
 
@@ -426,10 +424,8 @@ const RegisterCompany = () => {
                     id="state"
                     value={formData.state}
                     onChange={(e) => handleInputChange("state", e.target.value)}
-                    placeholder="State"
+                    placeholder="Enter state or auto-fill"
                     required
-                    readOnly
-                    className="bg-gray-50"
                   />
                 </div>
 
@@ -441,9 +437,7 @@ const RegisterCompany = () => {
                     onChange={(e) =>
                       handleInputChange("pincode", e.target.value)
                     }
-                    placeholder="Pin code"
-                    readOnly
-                    className="bg-gray-50"
+                    placeholder="Enter pin code or auto-fill"
                   />
                 </div>
 
@@ -455,10 +449,8 @@ const RegisterCompany = () => {
                     onChange={(e) =>
                       handleInputChange("country", e.target.value)
                     }
-                    placeholder="Country"
+                    placeholder="Enter country or auto-fill"
                     required
-                    readOnly
-                    className="bg-gray-50"
                   />
                 </div>
               </div>
@@ -469,9 +461,10 @@ const RegisterCompany = () => {
                   <Input
                     id="timezone"
                     value={formData.timezone}
-                    placeholder="Auto-filled from address"
-                    readOnly
-                    className="bg-gray-50"
+                    onChange={(e) =>
+                      handleInputChange("timezone", e.target.value)
+                    }
+                    placeholder="e.g., America/New_York or auto-fill"
                     required
                   />
                 </div>
@@ -481,9 +474,10 @@ const RegisterCompany = () => {
                   <Input
                     id="currency"
                     value={formData.currency}
-                    placeholder="Auto-filled from address"
-                    readOnly
-                    className="bg-gray-50"
+                    onChange={(e) =>
+                      handleInputChange("currency", e.target.value)
+                    }
+                    placeholder="e.g., USD or auto-fill"
                     required
                   />
                 </div>
@@ -554,12 +548,12 @@ const RegisterCompany = () => {
 
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                 <h4 className="font-semibold mb-2 text-blue-900">
-                  💡 Address Auto-Fill
+                  💡 Address Entry Options
                 </h4>
                 <p className="text-sm text-blue-800">
-                  Start typing your address and select from suggestions. City,
-                  State, Country, Pin Code, Timezone, and Currency will be
-                  automatically filled.
+                  <strong>Option 1:</strong> Start typing your address and select from suggestions to auto-fill City, State, Country, Pin Code, Timezone, and Currency.
+                  <br />
+                  <strong>Option 2:</strong> Manually enter all address fields including timezone and currency.
                 </p>
               </div>
 
