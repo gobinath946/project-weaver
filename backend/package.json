@@ -1,19 +1,14 @@
 {
   "name": "project-hub-backend",
   "version": "1.0.0",
-  "description": "Backend for Vehicle Trade-in and Inspection Platform",
+  "description": "Backend for Project Management Platform",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "jest"
   },
-  "keywords": [
-    "vehicle",
-    "inspection",
-    "tradein",
-    "enterprise"
-  ],
+
   "author": "Project Hub Team",
   "license": "MIT",
   "dependencies": {

@@ -84,7 +84,6 @@ router.post(
 // @route   GET /api/auth/me
 router.get("/me", protect, getMe);
 
-// @route   GET /api/auth/me/permissions?module_name=vehicle_inspection
 router.get("/me/permissions", protect, async (req, res) => {
   try {
     const { module_name } = req.query;

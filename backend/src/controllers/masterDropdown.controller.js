@@ -329,23 +329,7 @@ const deleteValue = async (req, res) => {
   }
 };
 
-// @desc    Get master inspection categories (static)
-// @route   GET /api/master/dropdowns/master_inspection
-// @access  Private (Master Admin)
-const getMasterInspection = async (_req, res) => {
-  try {
-    const masterCategories = [
-      { category_id: 'at_arrival', category_name: 'At Arrival', description: 'Initial vehicle inspection upon arrival' },
-      { category_id: 'after_reconditioning', category_name: 'After Reconditioning', description: 'Inspection after vehicle reconditioning' },
-      { category_id: 'after_grooming', category_name: 'After Grooming', description: 'Final inspection after grooming' },
-    ];
 
-    res.status(200).json({ success: true, data: masterCategories });
-  } catch (error) {
-    console.error('Master: Get master inspection error:', error);
-    res.status(500).json({ success: false, message: 'Error retrieving master inspection categories' });
-  }
-};
 
 module.exports = {
   getDropdowns,
@@ -357,5 +341,4 @@ module.exports = {
   updateValue,
   deleteValue,
   reorderValues,
-  getMasterInspection,
 };

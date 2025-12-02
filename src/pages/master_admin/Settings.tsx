@@ -425,7 +425,7 @@ const MasterSettings = () => {
               <CardHeader>
                 <CardTitle>AWS Configuration</CardTitle>
                 <CardDescription>
-                  Configure AWS credentials and SQS settings for vehicle data
+                  Configure AWS credentials and SQS settings for Project data
                   processing
                 </CardDescription>
               </CardHeader>

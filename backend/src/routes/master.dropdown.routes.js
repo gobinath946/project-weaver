@@ -10,7 +10,6 @@ const {
   updateValue, 
   deleteValue, 
   reorderValues, 
-  getMasterInspection 
 } = require('../controllers/masterDropdown.controller');
 const router = express.Router();
 
@@ -30,7 +29,6 @@ router.put('/:id/values/:valueId', updateValue);
 router.put('/:id/reorder/values', reorderValues);
 router.delete('/:id/values/:valueId', deleteValue);
 
-// Static master inspection categories
-router.get('/master_inspection', getMasterInspection);
+
 
 module.exports = router;

@@ -414,7 +414,7 @@ const CompanySettings = () => {
               <CardHeader>
                 <CardTitle>AWS S3 Configuration</CardTitle>
                 <CardDescription>
-                  Configure your cloud storage for vehicle images and documents
+                  Configure your cloud storage for Project images and documents
                 </CardDescription>
               </CardHeader>
               <CardContent>

@@ -767,7 +767,7 @@ const DropdownMaster = () => {
                 id="dropdown_name"
                 value={formData.dropdown_name}
                 disabled
-                placeholder="vehicle_condition"
+                placeholder="project_condition"
                 required
               />
               <p className="text-sm text-muted-foreground">
@@ -791,7 +791,7 @@ const DropdownMaster = () => {
                       .replace(/[^a-z0-9_]/g, ""), // remove special chars (optional)
                   });
                 }}
-                placeholder="Vehicle Condition"
+                placeholder="Project Condition"
                 required
               />
             </div>
@@ -803,7 +803,7 @@ const DropdownMaster = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Condition options for vehicles"
+                placeholder="Condition options for project"
               />
             </div>
             <div className="flex items-center space-x-2">

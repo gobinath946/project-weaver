@@ -10,7 +10,6 @@ const {
   updateValue,
   deleteValue,
   reorderValues,
-  getMasterInspection
 } = require('../controllers/dropdown.controller');
 
 const router = express.Router();
@@ -32,7 +31,5 @@ router.put('/:id/values/:valueId', authorize('company_super_admin'), updateValue
 router.put('/:id/reorder/values', authorize('company_super_admin'), reorderValues);
 router.delete('/:id/values/:valueId', authorize('company_super_admin'), deleteValue);
 
-// Special routes
-router.get('/master_inspection', getMasterInspection);
 
 module.exports = router;

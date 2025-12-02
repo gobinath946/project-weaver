@@ -315,8 +315,6 @@ export const dropdownServices = {
 
   reorderValues: (dropdownId: string, data: any) =>
     apiClient.put(`/api/dropdown/${dropdownId}/reorder/values`, data),
-
-  getMasterInspection: () => apiClient.get("/api/dropdown/master_inspection"),
 };
 
 export const logServices = {

@@ -204,19 +204,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           icon: Home,
           label: "Dashboard",
           path: "/company/dashboard",
-          module: "vehicle_dashboard",
+          module: "project_dashboard",
         },
         {
           icon: Users,
           label: "Users",
           path: "/company/users",
-          module: "vehicle_user",
+          module: "project_user",
         },
         {
           icon: Shield,
           label: "Permission",
           path: "/company/permissions",
-          module: "vehicle_permission",
+          module: "project_permission",
         },
   
         {
@@ -240,7 +240,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         icon: BarChart3,
         label: "Dashboard",
         path: "/company/dashboard",
-        module: "vehicle_dashboard",
+        module: "project_dashboard",
       },
     ];
   };

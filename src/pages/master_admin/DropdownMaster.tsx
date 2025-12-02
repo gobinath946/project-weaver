@@ -587,7 +587,7 @@ const MasterDropdownMaster = () => {
                 id="dropdown_name"
                 value={formData.dropdown_name}
                 onChange={(e) => setFormData({ ...formData, dropdown_name: e.target.value })}
-                placeholder="vehicle_condition"
+                placeholder="project_condition"
                 required
               />
               <p className="text-sm text-muted-foreground">Used internally (lowercase, no spaces)</p>
@@ -598,7 +598,7 @@ const MasterDropdownMaster = () => {
                 id="display_name"
                 value={formData.display_name}
                 onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                placeholder="Vehicle Condition"
+                placeholder="project Condition"
                 required
               />
             </div>
@@ -608,7 +608,7 @@ const MasterDropdownMaster = () => {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Global condition options for vehicles"
+                placeholder="Global condition options for project"
               />
             </div>
             <div className="flex items-center space-x-2">

@@ -6,7 +6,7 @@ const GlobalLogSchema = new mongoose.Schema({
     required: true,
     index: true, // Individual index for filtering
     enum: [
-      'auth', 'user_management', 'vehicle_operation', 'inspection',
+      'auth', 'user_management', 'project_operation', 'inspection',
       'tradein', 'configuration', 'api_call', 'data_export',
       'system_error', 'security_event', 'queue_operation','system_operation',
       'supplier_operation','workshop_operation','meta_operation'

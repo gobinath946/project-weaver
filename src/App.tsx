@@ -111,17 +111,17 @@ const App = () => {
       
       {/* Company Routes */}
       <Route path="/company/dashboard" element={
-        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="vehicle_dashboard">
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_dashboard">
           <UnifiedDashboard />
         </ProtectedRoute>
       } />
       <Route path="/company/users" element={
-        <ProtectedRoute allowedRoles={['company_super_admin']} requiredModule="vehicle_user">
+        <ProtectedRoute allowedRoles={['company_super_admin']} requiredModule="project_user">
           <CompanyUsers />
         </ProtectedRoute>
       } />
       <Route path="/company/permissions" element={
-        <ProtectedRoute allowedRoles={['company_super_admin']} requiredModule="vehicle_permission">
+        <ProtectedRoute allowedRoles={['company_super_admin']} requiredModule="project_permission">
           <UserPermissions />
         </ProtectedRoute>
       } />
