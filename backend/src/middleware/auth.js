@@ -1,10 +1,15 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
-exports.protect = async (req, res, next) => {
+const jwt = require('jsonwebtoken');
+const MasterAdmin = require('../models/MasterAdmin');
+const User = require('../models/User');
+const Env_Configuration = require('../config/env');
+
+// Protect routes - authenticate user
+const protect = async (req, res, next) => {
   try {
     let token;
 
+    // Get token from header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -12,82 +17,104 @@ exports.protect = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        error: {
-          code: 'NO_TOKEN',
-          message: 'Not authorized to access this route'
-        }
+        message: 'No token provided, access denied'
       });
     }
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id);
+    // Verify token
+    const decoded = jwt.verify(token, Env_Configuration.JWT_SECRET);
 
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: {
-            code: 'USER_NOT_FOUND',
-            message: 'User not found'
-          }
-        });
-      }
+    // Find user based on role
+    let user;
+    if (decoded.role === 'master_admin') {
+      user = await MasterAdmin.findById(decoded.id);
+    } else {
+      user = await User.findById(decoded.id).populate('company_id').populate('dealership_ids');
+    }
 
-      if (!req.user.isActive) {
-        return res.status(401).json({
-          success: false,
-          error: {
-            code: 'USER_INACTIVE',
-            message: 'User account is inactive'
-          }
-        });
-      }
-
-      next();
-    } catch (err) {
+    if (!user) {
       return res.status(401).json({
         success: false,
-        error: {
-          code: 'INVALID_TOKEN',
-          message: 'Token is invalid or expired'
-        }
+        message: 'User not found, token invalid'
       });
     }
+
+    if (!user.is_active) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is deactivated'
+      });
+    }
+    // Add user to request
+    req.user = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      is_primary_admin:user.is_primary_admin,
+      company_id: user.company_id?._id || user.company_id,
+      dealership_ids: user.dealership_ids
+    };
+
+    next();
   } catch (error) {
-    next(error);
+    console.error('Auth middleware error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error in authentication'
+    });
   }
 };
 
-exports.authorize = (...roles) => {
+// Authorize based on roles
+const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.user.roles.some(role => roles.includes(role))) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        error: {
-          code: 'FORBIDDEN',
-          message: 'Not authorized to perform this action'
-        }
+        message: `Access denied. Required roles: ${roles.join(', ')}`
       });
     }
     next();
   };
 };
 
-exports.checkCompanyAccess = async (req, res, next) => {
-  try {
-    const companyId = req.params.companyId || req.body.companyId;
-    
-    if (companyId && req.user.companyId?.toString() !== companyId) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'COMPANY_ACCESS_DENIED',
-          message: 'Access denied to this company'
-        }
-      });
-    }
-    next();
-  } catch (error) {
-    next(error);
+// Company scope middleware - ensures users can only access their company data
+const companyScopeCheck = (req, res, next) => {
+  // Master admin can access all companies
+  if (req.user.role === 'master_admin') {
+    return next();
   }
+
+  // For company users, ensure they can only access their company data
+  const requestedCompanyId = req.params.companyId || req.body.company_id || req.query.company_id;
+  
+  if (requestedCompanyId && requestedCompanyId !== req.user.company_id.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. Cannot access other company data'
+    });
+  }
+
+  next();
+};
+
+module.exports = {
+  protect,
+  authorize,
+  companyScopeCheck
 };

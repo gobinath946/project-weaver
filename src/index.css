@@ -2,116 +2,242 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
+/* =========================
+   🎨 Global Theme Variables
+   ========================= */
 @layer base {
   :root {
-    --background: 220 17% 97%;
-    --foreground: 222 47% 11%;
-
+    /* Automotive Professional Palette */
+    --background: 240 6% 97%;
+    --foreground: 240 10% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
+    --card-foreground: 240 10% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 240 10% 8%;
 
-    --primary: 262 83% 58%;
+    /* Primary - Professional Blue */
+    --primary: 218 89% 51%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
+    /* Secondary - Steel Gray */
+    --secondary: 215 20% 65%;
+    --secondary-foreground: 240 10% 8%;
 
+    /* Accent - Electric Blue */
+    --accent: 205 100% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Muted */
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 262 52% 95%;
-    --accent-foreground: 262 83% 58%;
+    /* Destructive - Warning Red */
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262 83% 58%;
-
+    /* Success - Professional Green */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
+    /* Warning - Amber */
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 199 89% 48%;
-    --info-foreground: 0 0% 100%;
+    /* Borders */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 218 89% 51%;
+
+    /* Automotive Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(218, 89%, 51%) 0%, hsl(205, 100%, 60%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(215, 20%, 65%) 0%, hsl(220, 14%, 96%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(240, 10%, 8%) 0%, hsl(218, 89%, 51%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(220, 14%, 96%) 100%);
 
     --radius: 0.75rem;
-
-    --sidebar-background: 262 90% 6%;
-    --sidebar-foreground: 262 10% 85%;
-    --sidebar-primary: 262 83% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 262 50% 12%;
-    --sidebar-accent-foreground: 262 10% 90%;
-    --sidebar-border: 262 30% 18%;
-    --sidebar-ring: 262 83% 58%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 15%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 15%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 262 83% 58%;
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 218 89% 51%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 262 33% 24%;
-    --accent-foreground: 262 83% 68%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 22%;
-    --input: 217 33% 22%;
-    --ring: 262 83% 58%;
-
-    --success: 142 70% 45%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --info: 199 89% 48%;
-    --info-foreground: 0 0% 100%;
-
-    --sidebar-background: 262 90% 6%;
-    --sidebar-foreground: 262 10% 85%;
-    --sidebar-primary: 262 83% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 262 50% 12%;
-    --sidebar-accent-foreground: 262 10% 90%;
-    --sidebar-border: 262 30% 18%;
-    --sidebar-ring: 262 83% 58%;
+    --secondary: 215 20% 25%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 205 100% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 218 89% 51%;
   }
 }
 
+/* =========================
+   🔤 Responsive Typography
+   ========================= */
 @layer base {
-  * {
-    @apply border-border;
+  html {
+    font-size: 14px; /* default = large screen */
+  }
+
+  @media (max-width: 1024px) { /* md */
+    html {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 640px) { /* sm */
+    html {
+      font-size: 12px;
+    }
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    line-height: 1.5;
+    font-size: 1rem; /* relative to html */
   }
+
+  h1 {
+    font-size: 2.5rem; /* scales with html size */
+    line-height: 1.2;
+    @apply font-bold tracking-tight;
+  }
+
+  h2 {
+    font-size: 2rem;
+    line-height: 1.3;
+    @apply font-semibold tracking-tight;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    line-height: 1.35;
+    @apply font-semibold;
+  }
+
+  h4, h5, h6 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    @apply font-medium;
+  }
+
+  p, span, li, a, button, input, textarea {
+    font-size: 1rem; /* will shrink according to html size */
+    line-height: 1.5;
+  }
+
+  * {
+    @apply border-border;
+  }
+}
+
+/* =========================
+   🧩 Custom Components
+   ========================= */
+@layer components {
+  .gradient-primary { background: var(--gradient-primary); }
+  .gradient-secondary { background: var(--gradient-secondary); }
+  .gradient-hero { background: var(--gradient-hero); }
+  .gradient-card { background: var(--gradient-card); }
+
+  .glass-effect {
+    backdrop-filter: blur(12px);
+    background: hsla(0, 0%, 100%, 0.8);
+    border: 1px solid hsla(220, 13%, 91%, 0.3);
+  }
+
+  .automotive-shadow {
+    box-shadow: 
+      0 1px 3px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  .hero-text {
+    background: linear-gradient(135deg, hsl(240, 10%, 8%) 0%, hsl(218, 89%, 51%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .animate-float { animation: float 3s ease-in-out infinite; }
+  .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+  .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+  
+  /* Landing Page Animations */
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+  
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
+
+/* =========================
+   🎞️ Keyframes
+   ========================= */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* =========================
+   🖱️ Professional Scrollbar
+   ========================= */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
+}
+
+
+/* Make scrollbar thinner ONLY for this scroll area */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px; /* adjust as needed */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
