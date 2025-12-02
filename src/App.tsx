@@ -26,12 +26,19 @@ import MasterDropdownMaster from "./pages/master_admin/DropdownMaster";
 import CustomModuleConfig from "./pages/master_admin/CustomModuleConfig";
 import WebsiteMaintenance from "./pages/master_admin/WebsiteMaintenance";
 import GlobalLogs from "./pages/master_admin/GlobalLogs";
-import UnifiedDashboard from "./pages/company/UnifiedDashboard";
 import CompanyUsers from "./pages/company/Users";
 import CompanySettings from "./pages/company/Settings";
 import DropdownMaster from "./pages/company/DropdownMaster";
 import UserPermissions from './pages/company/UserPermissions';
 import NotFound from "./pages/NotFound";
+
+// Project Management Pages
+import ProjectList from "./pages/company/project_management/ProjectList";
+import TaskList from "./pages/company/project_management/TaskList";
+import BugList from "./pages/company/project_management/BugList";
+import TimeLogList from "./pages/company/project_management/TimeLogList";
+import ProjectDashboard from "./pages/company/project_management/ProjectDashboard";
+import PMDashboard from "./pages/company/project_management/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -112,7 +119,7 @@ const App = () => {
       {/* Company Routes */}
       <Route path="/company/dashboard" element={
         <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_dashboard">
-          <UnifiedDashboard />
+          <PMDashboard />
         </ProtectedRoute>
       } />
       <Route path="/company/users" element={
@@ -134,6 +141,32 @@ const App = () => {
       <Route path="/company/dropdown-master" element={
         <ProtectedRoute allowedRoles={['company_super_admin']} requiredModule="dropdown_master">
           <DropdownMaster />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/company/project_list" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectList />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/task_list" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <TaskList />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/bug_list" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <BugList />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/timelog_list" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <TimeLogList />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/project/:id/dashboard" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectDashboard />
         </ProtectedRoute>
       } />
 

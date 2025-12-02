@@ -26,8 +26,13 @@ import {
   Wrench,
   BarChart3,
   MoreVertical,
+  ClipboardList,
+  KanbanSquare,
+  ListCheck,
+  Bug,
+  Timer,
 } from "lucide-react";
-import { authServices, } from "@/api/services";
+import { authServices } from "@/api/services";
 import { Badge } from "../ui/badge";
 import { Link, useLocation } from "react-router-dom";
 import SubscriptionModal from "@/components/subscription/SubscriptionModal";
@@ -169,7 +174,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     },
   });
 
-
   useEffect(() => {
     if (
       user?.subscription_modal_force &&
@@ -218,14 +222,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           path: "/company/permissions",
           module: "project_permission",
         },
-  
+
         {
           icon: Database,
           label: "Dropdown Master",
           path: "/company/dropdown-master",
           module: "dropdown_master",
         },
-       
+
+        {
+          icon: ClipboardList, // or LayoutDashboard
+          label: "Project Management",
+          module: "project_management",
+          children: [
+            {
+              icon: KanbanSquare,
+              label: "Projects",
+              path: "/company/project_list",
+            },
+            { icon: ListCheck, label: "Tasks", path: "/company/task_list" },
+            { icon: Bug, label: "Bugs", path: "/company/bug_list" },
+            { icon: Timer, label: "TimeLogs", path: "/company/timelog_list" },
+          ],
+        },
         {
           icon: UserCog,
           label: "Settings",
@@ -241,6 +260,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         label: "Dashboard",
         path: "/company/dashboard",
         module: "project_dashboard",
+      },
+      {
+        icon: ClipboardList, // or LayoutDashboard
+        label: "Project Management",
+        module: "project_management",
+        children: [
+          {
+            icon: KanbanSquare,
+            label: "Projects",
+            path: "/company/project_list",
+          },
+          { icon: ListCheck, label: "Tasks", path: "/company/task_list" },
+          { icon: Bug, label: "Bugs", path: "/company/bug_list" },
+          { icon: Timer, label: "TimeLogs", path: "/company/timelog_list" },
+        ],
       },
     ];
   };
@@ -345,7 +379,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     // If module changed, fetch permissions for that module
     if (detectedModule && detectedModule !== currentModule) {
       setCurrentModule(detectedModule);
-      
+
       authServices
         .getCurrentUserPermissions(detectedModule)
         .then((response) => {
@@ -728,8 +762,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <p className="font-medium">{completeUser.company_id._id}</p>
           </div>
         )}
-
-
       </div>
 
       {/* Docs */}
@@ -834,9 +866,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-              </Button>
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5" />
+            </Button>
 
             <Link to="/docs">
               <Button variant="ghost" size="sm">
@@ -850,15 +882,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 Company ID: {completeUser.company_id._id}
               </Badge>
             )}
-
-         
           </div>
 
           {/* Mobile Actions - Notification + Options */}
           <div className="md:hidden flex items-center space-x-2">
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-              </Button>
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5" />
+            </Button>
 
             <Button
               variant="ghost"

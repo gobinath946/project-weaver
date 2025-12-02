@@ -317,6 +317,60 @@ export const dropdownServices = {
     apiClient.put(`/api/dropdown/${dropdownId}/reorder/values`, data),
 };
 
+// Project Management Services
+export const projectServices = {
+  // Projects
+  getProjects: (params?: any) => apiClient.get("/api/projects", { params }),
+  getProject: (id: string) => apiClient.get(`/api/projects/${id}`),
+  createProject: (data: any) => apiClient.post("/api/projects", data),
+  updateProject: (id: string, data: any) => apiClient.put(`/api/projects/${id}`, data),
+  deleteProject: (id: string) => apiClient.delete(`/api/projects/${id}`),
+  getProjectStats: (id: string) => apiClient.get(`/api/projects/${id}/stats`),
+  getProjectUsers: () => apiClient.get("/api/projects/users"),
+  getProjectDashboard: (id: string) => apiClient.get(`/api/project-dashboard/projects/${id}/dashboard`),
+
+  // Task Lists
+  getTaskLists: (projectId: string) => apiClient.get(`/api/projects/${projectId}/task-lists`),
+  createTaskList: (projectId: string, data: any) => apiClient.post(`/api/projects/${projectId}/task-lists`, data),
+  updateTaskList: (id: string, data: any) => apiClient.put(`/api/task-lists/${id}`, data),
+  deleteTaskList: (id: string) => apiClient.delete(`/api/task-lists/${id}`),
+  reorderTaskLists: (projectId: string, data: any) => apiClient.put(`/api/projects/${projectId}/task-lists/reorder`, data),
+
+  // Tasks
+  getTasks: (params?: any) => apiClient.get("/api/tasks", { params }),
+  getTask: (id: string) => apiClient.get(`/api/tasks/${id}`),
+  createTask: (data: any) => apiClient.post("/api/tasks", data),
+  updateTask: (id: string, data: any) => apiClient.put(`/api/tasks/${id}`, data),
+  deleteTask: (id: string) => apiClient.delete(`/api/tasks/${id}`),
+  getTasksKanban: (params?: any) => apiClient.get("/api/tasks/kanban", { params }),
+  getTasksByProject: (projectId: string, params?: any) => apiClient.get(`/api/tasks/projects/${projectId}/tasks`, { params }),
+
+  // Bugs
+  getBugs: (params?: any) => apiClient.get("/api/bugs", { params }),
+  getBug: (id: string) => apiClient.get(`/api/bugs/${id}`),
+  createBug: (data: any) => apiClient.post("/api/bugs", data),
+  updateBug: (id: string, data: any) => apiClient.put(`/api/bugs/${id}`, data),
+  deleteBug: (id: string) => apiClient.delete(`/api/bugs/${id}`),
+  getBugsKanban: (params?: any) => apiClient.get("/api/bugs/kanban", { params }),
+  getBugsByProject: (projectId: string, params?: any) => apiClient.get(`/api/bugs/projects/${projectId}/bugs`, { params }),
+
+  // Time Logs
+  getTimeLogs: (params?: any) => apiClient.get("/api/timelogs", { params }),
+  getTimeLog: (id: string) => apiClient.get(`/api/timelogs/${id}`),
+  createTimeLog: (data: any) => apiClient.post("/api/timelogs", data),
+  updateTimeLog: (id: string, data: any) => apiClient.put(`/api/timelogs/${id}`, data),
+  deleteTimeLog: (id: string) => apiClient.delete(`/api/timelogs/${id}`),
+  approveTimeLog: (id: string) => apiClient.patch(`/api/timelogs/${id}/approve`),
+  rejectTimeLog: (id: string, data?: any) => apiClient.patch(`/api/timelogs/${id}/reject`, data),
+  getTimeLogAggregates: (params?: any) => apiClient.get("/api/timelogs/aggregates", { params }),
+
+  // Dashboard
+  getDashboardStats: () => apiClient.get("/api/project-dashboard/stats"),
+  getMyTasks: (params?: any) => apiClient.get("/api/project-dashboard/my-tasks", { params }),
+  getDueToday: () => apiClient.get("/api/project-dashboard/due-today"),
+  getOverdueItems: () => apiClient.get("/api/project-dashboard/overdue"),
+};
+
 export const logServices = {
   // Get logs with optimized parameters and caching
   getLogs: (queryString: string) =>
@@ -368,6 +422,6 @@ export default {
   dropdown: dropdownServices,
   masterDropdown: masterDropdownServices,
   logs: logServices,
-  custommodule:customModuleServices,
-
+  custommodule: customModuleServices,
+  project: projectServices,
 };

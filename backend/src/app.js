@@ -17,6 +17,14 @@ const logsRoutes = require("./routes/logs.routes");
 const subscriptionRoutes = require("./routes/subscription.routes");
 const customModuleRoutes = require("./routes/customModule.routes");
 
+// Project Management Routes
+const projectRoutes = require("./routes/project.routes");
+const taskListRoutes = require("./routes/taskList.routes");
+const taskRoutes = require("./routes/task.routes");
+const bugRoutes = require("./routes/bug.routes");
+const timeLogRoutes = require("./routes/timeLog.routes");
+const projectDashboardRoutes = require("./routes/projectDashboard.routes");
+
 
 const errorHandler = require("./middleware/error");
 const { logRequest } = require("./controllers/logs.controller");
@@ -101,6 +109,14 @@ app.use("/api/dropdown", dropdownRoutes);
 app.use("/api/logs", logsRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/master/custom-modules", customModuleRoutes);
+
+// Project Management API Routes
+app.use("/api/projects", projectRoutes);
+app.use("/api", taskListRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/bugs", bugRoutes);
+app.use("/api/timelogs", timeLogRoutes);
+app.use("/api/project-dashboard", projectDashboardRoutes);
 
 
 app.get("/api/health", async (req, res) => {
