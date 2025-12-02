@@ -34,7 +34,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { dealershipServices } from "@/api/services";
 import apiClient from "@/api/axios";
 import UserDeleteDialog from "../../components/dialogs/UserDeleteDialog";
 import UserEditDialog from "../../components/dialogs/UserEditDialog";
@@ -47,7 +46,6 @@ const CompanyUsers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [dealershipFilter, setDealershipFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [paginationEnabled, setPaginationEnabled] = useState(true);
@@ -87,7 +85,6 @@ const CompanyUsers = () => {
     first_name: "",
     last_name: "",
     role: "company_admin",
-    dealership_ids: [] as string[],
   });
 
   const { data: userInfo } = useQuery({
@@ -100,35 +97,8 @@ const CompanyUsers = () => {
 
   const isPrimaryAdmin = userInfo?.is_primary_admin || false;
 
-  const { data: dealerships } = useQuery({
-    queryKey: ["dealerships-dropdown", isPrimaryAdmin],
-    queryFn: async () => {
-      const response = await dealershipServices.getDealershipsDropdown();
-      
-      if (!isPrimaryAdmin && completeUser?.dealership_ids) {
-        const userDealershipIds = completeUser.dealership_ids.map((d: any) => 
-          typeof d === 'object' ? d._id : d
-        );
-        return response.data.data.filter((dealership: any) => 
-          userDealershipIds.includes(dealership._id)
-        );
-      }
-      
-      return response.data.data;
-    },
-    enabled: !!completeUser,
-  });
 
-  useEffect(() => {
-    if (dealerships && dealerships.length > 0) {
-      if (!isPrimaryAdmin && dealerships.length === 1) {
-        setFormData(prev => ({
-          ...prev,
-          dealership_ids: [dealerships[0]._id]
-        }));
-      }
-    }
-  }, [dealerships, isPrimaryAdmin]);
+
 
   // Function to fetch all users when pagination is disabled
   const fetchAllUsers = async () => {
@@ -146,7 +116,6 @@ const CompanyUsers = () => {
         if (searchTerm) params.append("search", searchTerm);
         if (statusFilter !== "all") params.append("status", statusFilter);
         if (roleFilter !== "all") params.append("role", roleFilter);
-        if (dealershipFilter !== "all") params.append("dealership", dealershipFilter);
 
         const response = await apiClient.get(`/api/company/users?${params}`);
         const responseData = response.data;
@@ -182,8 +151,8 @@ const CompanyUsers = () => {
     refetch,
   } = useQuery({
     queryKey: paginationEnabled
-      ? ["company-users", page, searchTerm, statusFilter, roleFilter, dealershipFilter, rowsPerPage]
-      : ["all-company-users", searchTerm, statusFilter, roleFilter, dealershipFilter],
+      ? ["company-users", page, searchTerm, statusFilter, roleFilter, rowsPerPage]
+      : ["all-company-users", searchTerm, statusFilter, roleFilter],
     queryFn: async () => {
       if (!paginationEnabled) {
         return await fetchAllUsers();
@@ -197,7 +166,6 @@ const CompanyUsers = () => {
       if (searchTerm) params.append("search", searchTerm);
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (roleFilter !== "all") params.append("role", roleFilter);
-      if (dealershipFilter !== "all") params.append("dealership", dealershipFilter);
 
       const response = await apiClient.get(`/api/company/users?${params}`);
       return response.data;
@@ -219,9 +187,6 @@ const CompanyUsers = () => {
       if (sortField === "full_name") {
         aValue = `${a.first_name} ${a.last_name}`;
         bValue = `${b.first_name} ${b.last_name}`;
-      } else if (sortField === "dealerships_count") {
-        aValue = a.dealership_ids?.length || 0;
-        bValue = b.dealership_ids?.length || 0;
       }
 
       if (typeof aValue === "string") {
@@ -273,7 +238,6 @@ const CompanyUsers = () => {
         first_name: "",
         last_name: "",
         role: "company_admin",
-        dealership_ids: [],
       });
       refetch();
     } catch (error: any) {
@@ -329,7 +293,6 @@ const CompanyUsers = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setRoleFilter("all");
-    setDealershipFilter("all");
     setPage(1);
     refetch();
   };
@@ -546,15 +509,7 @@ const CompanyUsers = () => {
           {getSortIcon("role")}
         </div>
       </TableHead>
-      <TableHead
-        className="bg-muted/50 cursor-pointer hover:bg-muted/70"
-        onClick={() => handleSort("dealerships_count")}
-      >
-        <div className="flex items-center">
-          Dealerships
-          {getSortIcon("dealerships_count")}
-        </div>
-      </TableHead>
+
       <TableHead
         className="bg-muted/50 cursor-pointer hover:bg-muted/70"
         onClick={() => handleSort("is_active")}
@@ -605,35 +560,7 @@ const CompanyUsers = () => {
                 .replace("company", "Company")}
             </Badge>
           </TableCell>
-          <TableCell>
-            <div className="flex flex-wrap gap-1">
-              {user.dealership_ids && user.dealership_ids.length > 0 ? (
-                <>
-                  {user.dealership_ids
-                    .slice(0, 2)
-                    .map((dealership: any, index: number) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs bg-orange-500 text-white hover:bg-orange-600"
-                      >
-                        {dealership.dealership_name ||
-                          dealership.dealership_id}
-                      </Badge>
-                    ))}
-                  {user.dealership_ids.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{user.dealership_ids.length - 2} more
-                    </Badge>
-                  )}
-                </>
-              ) : (
-                <span className="text-muted-foreground text-sm">
-                  No dealerships
-                </span>
-              )}
-            </div>
-          </TableCell>
+
           <TableCell>
             <div className="flex items-center space-x-2">
               {canToggleStatus && (
@@ -839,52 +766,7 @@ const CompanyUsers = () => {
               </ShadcnSelect>
             </div>
 
-            <div>
-              <Label>Assign Dealerships</Label>
-              <Select
-                isMulti
-                isSearchable
-                name="dealerships"
-                options={
-                  dealerships?.map((d: any) => ({
-                    value: d._id,
-                    label: `${d.dealership_name}`,
-                  })) || []
-                }
-                className="mt-2"
-                classNamePrefix="select"
-                value={formData.dealership_ids
-                  .map((id) => {
-                    const found = dealerships?.find(
-                      (d: any) => d._id === id
-                    );
-                    return found
-                      ? {
-                          value: found._id,
-                          label: `${found.dealership_name}`,
-                        }
-                      : null;
-                  })
-                  .filter(Boolean)}
-                onChange={(selected) =>
-                  setFormData({
-                    ...formData,
-                    dealership_ids: selected.map((s: any) => s.value),
-                  })
-                }
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {isPrimaryAdmin 
-                  ? "Select dealerships this user can access"
-                  : "You can only assign dealerships that you have access to"
-                }
-              </p>
-              {!isPrimaryAdmin && completeUser?.dealership_ids?.length === 0 && (
-                <p className="text-xs text-red-500 mt-1">
-                  You don't have access to any dealerships
-                </p>
-              )}
-            </div>
+
 
             <div className="flex justify-end space-x-2">
               <Button
@@ -934,22 +816,7 @@ const CompanyUsers = () => {
                 </SelectContent>
               </ShadcnSelect>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="dealership-filter">Dealership</Label>
-              <ShadcnSelect value={dealershipFilter} onValueChange={setDealershipFilter}>
-                <SelectTrigger id="dealership-filter">
-                  <SelectValue placeholder="Select dealership" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Dealerships</SelectItem>
-                  {dealerships?.map((dealership: any) => (
-                    <SelectItem key={dealership._id} value={dealership._id}>
-                      {dealership.dealership_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </ShadcnSelect>
-            </div>
+        
           </div>
           <div className="flex justify-between">
             <Button

@@ -215,7 +215,6 @@ const getUsers = async (req, res) => {
 
     const users = await User.find(filter)
       .populate("company_id")
-      .populate('dealership_ids', 'dealership_id dealership_name dealership_address')
       .sort({ created_at: -1 })
       .skip(skip)
       .limit(parseInt(limit))
@@ -278,7 +277,7 @@ const getUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
   try {
-    const { email, role, dealership_ids, is_primary_admin } = req.body;
+    const { email, role, is_primary_admin } = req.body;
 
     let creatingUser = req.user;
     
@@ -318,7 +317,6 @@ const createUser = async (req, res) => {
       ...req.body,
       password: defaultPassword,
       role: role || 'company_admin',
-      dealership_ids: dealership_ids || [],
       company_id: creatingUser.company_id,
       is_first_login: true,
       created_by: creatingUser.id,
@@ -355,7 +353,7 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { password, dealership_ids, is_primary_admin, ...updateData } = req.body;
+    const { password,  is_primary_admin, ...updateData } = req.body;
 
     let updatingUser = req.user;
     
@@ -390,7 +388,6 @@ const updateUser = async (req, res) => {
     // Prepare update data
     const finalUpdateData = {
       ...updateData,
-      ...(dealership_ids !== undefined && { dealership_ids }),
       ...(is_primary_admin !== undefined && { is_primary_admin: finalIsPrimaryAdmin })
     };
 
@@ -398,7 +395,7 @@ const updateUser = async (req, res) => {
       { _id: req.params.id, company_id: updatingUser.company_id },
       finalUpdateData,
       { new: true, runValidators: true }
-    ).select("-password").populate('dealership_ids', 'dealership_id dealership_name');
+    ).select("-password");
 
     if (!user) {
       return res.status(404).json({

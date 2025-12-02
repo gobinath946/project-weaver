@@ -13,7 +13,6 @@ const authRoutes = require("./routes/auth.routes");
 const masterRoutes = require("./routes/master.routes");
 const companyRoutes = require("./routes/company.routes");
 const dropdownRoutes = require("./routes/dropdown.routes");
-const dealershipRoutes = require("./routes/dealership.routes");
 const logsRoutes = require("./routes/logs.routes");
 const subscriptionRoutes = require("./routes/subscription.routes");
 const customModuleRoutes = require("./routes/customModule.routes");
@@ -95,7 +94,6 @@ app.use("/api/company", companyRoutes);
 app.use("/api/dropdown", dropdownRoutes);
 app.use("/api/logs", logsRoutes);
 app.use("/api/subscription", subscriptionRoutes);
-app.use("/api/dealership", dealershipRoutes);
 app.use("/api/master/custom-modules", customModuleRoutes);
 
 

@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { dealershipServices, dropdownServices } from "@/api/services";
+import {  dropdownServices } from "@/api/services";
 import ValueManagementDialog from "../../components/dropdown/ValueManagementDialog";
 import DataTableLayout from "@/components/common/DataTableLayout";
 import { useAuth } from "@/auth/AuthContext";
@@ -54,7 +54,6 @@ const DropdownMaster = () => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [dealershipFilter, setDealershipFilter] = useState("all");
   const [settingsFilter, setSettingsFilter] = useState("all");
   const [selectedDropdown, setSelectedDropdown] = useState(null);
   const [page, setPage] = useState(1);
@@ -67,7 +66,6 @@ const DropdownMaster = () => {
   // Get user info from auth context
   const { completeUser } = useAuth();
   const isPrimaryAdmin = completeUser?.is_primary_admin;
-  const userDealerships = completeUser?.dealership_ids || [];
 
   // Permission checks
   const canRefresh = hasPermission(completeUser, 'drop_down_refresh');
@@ -86,7 +84,6 @@ const DropdownMaster = () => {
     description: "",
     allow_multiple_selection: false,
     is_required: false,
-    dealership_id: isPrimaryAdmin ? "" : userDealerships[0]?._id || "", // Set default dealership if not primary admin
   });
 
   // Function to fetch all dropdowns when pagination is disabled
@@ -102,7 +99,6 @@ const DropdownMaster = () => {
           limit: 100,
           search: searchTerm,
           status: statusFilter !== "all" ? statusFilter : undefined,
-          dealership_id: dealershipFilter !== "all" ? dealershipFilter : undefined,
         };
 
         const response = await dropdownServices.getDropdowns(params);
@@ -142,8 +138,8 @@ const DropdownMaster = () => {
     refetch,
   } = useQuery({
     queryKey: paginationEnabled
-      ? ["dropdowns", page, searchTerm, statusFilter, dealershipFilter, settingsFilter, rowsPerPage]
-      : ["all-dropdowns", searchTerm, statusFilter, dealershipFilter, settingsFilter],
+      ? ["dropdowns", page, searchTerm, statusFilter, settingsFilter, rowsPerPage]
+      : ["all-dropdowns", searchTerm, statusFilter, settingsFilter],
     queryFn: async () => {
       if (!paginationEnabled) {
         return await fetchAllDropdowns();
@@ -154,7 +150,6 @@ const DropdownMaster = () => {
         limit: rowsPerPage,
         search: searchTerm,
         status: statusFilter !== "all" ? statusFilter : undefined,
-        dealership_id: dealershipFilter !== "all" ? dealershipFilter : undefined,
       };
 
       const response = await dropdownServices.getDropdowns(params);
@@ -229,10 +224,9 @@ const DropdownMaster = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      // Only include dealership_id if user is not primary admin
       const submitData = isPrimaryAdmin
         ? formData
-        : { ...formData, dealership_id: formData.dealership_id };
+        :"";
 
       await dropdownServices.createDropdown(submitData);
       toast.success("Dropdown created successfully");
@@ -243,7 +237,6 @@ const DropdownMaster = () => {
         description: "",
         allow_multiple_selection: false,
         is_required: false,
-        dealership_id: isPrimaryAdmin ? "" : userDealerships[0]?._id || "",
       });
       refetch();
     } catch (error: any) {
@@ -254,10 +247,9 @@ const DropdownMaster = () => {
   const handleEditSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      // Only include dealership_id if user is not primary admin
       const submitData = isPrimaryAdmin
         ? editDropdown
-        : { ...editDropdown, dealership_id: editDropdown.dealership_id };
+        : null;
 
       await dropdownServices.updateDropdown(editDropdown._id, submitData);
       toast.success("Dropdown updated successfully");
@@ -317,7 +309,6 @@ const DropdownMaster = () => {
   const handleClearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
-    setDealershipFilter("all");
     setSettingsFilter("all");
     setPage(1);
     refetch();
@@ -456,32 +447,8 @@ const DropdownMaster = () => {
       : []),
   ];
 
-  const { data: dealerships } = useQuery({
-    queryKey: ["dealerships-dropdown", completeUser?.is_primary_admin],
-    queryFn: async () => {
-      const response = await dealershipServices.getDealershipsDropdown();
 
-      if (!completeUser?.is_primary_admin && completeUser?.dealership_ids) {
-        const userDealershipIds = completeUser.dealership_ids.map((d: any) =>
-          typeof d === "object" ? d._id : d
-        );
-        return response.data.data.filter((dealership: any) =>
-          userDealershipIds.includes(dealership._id)
-        );
-      }
 
-      return response.data.data;
-    },
-    enabled: !!completeUser,
-  });
-
-  const getDealershipName = (dealershipId: string) => {
-    const dealership = dealerships?.find(
-      (dealer: any) => dealer._id === dealershipId
-    );
-    return dealership ? formatApiNames(dealership.dealership_name) : "Primary";
-  };
-  // Add dealership column to table header
   const renderTableHeader = () => (
     <TableRow>
       <TableHead className="bg-muted/50">S.No</TableHead>
@@ -512,7 +479,6 @@ const DropdownMaster = () => {
           {getSortIcon("values_count")}
         </div>
       </TableHead>
-      <TableHead className="bg-muted/50">Dealership</TableHead>
       <TableHead className="bg-muted/50">Settings</TableHead>
       <TableHead
         className="bg-muted/50 cursor-pointer hover:bg-muted/70"
@@ -527,7 +493,6 @@ const DropdownMaster = () => {
     </TableRow>
   );
 
-  // Update table body to show dealership info
   const renderTableBody = () => (
     <>
       {sortedDropdowns.map((dropdown: any, index: number) => (
@@ -574,11 +539,7 @@ const DropdownMaster = () => {
               )}
             </div>
           </TableCell>
-          <TableCell>
-            <Badge className="bg-orange-500 text-white hover:bg-orange-600">
-              {getDealershipName(dropdown.dealership_id)}
-            </Badge>
-          </TableCell>
+
           <TableCell>
             <div className="flex gap-1">
               {dropdown.allow_multiple_selection && (
@@ -731,23 +692,6 @@ const DropdownMaster = () => {
             <DialogDescription>Filter by various criteria</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {/* Dealership Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="dealership-filter">Filter by Dealership</Label>
-              <Select value={dealershipFilter} onValueChange={setDealershipFilter}>
-                <SelectTrigger id="dealership-filter">
-                  <SelectValue placeholder="Select dealership" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Dealerships</SelectItem>
-                  {dealerships?.map((dealership: any) => (
-                    <SelectItem key={dealership._id} value={dealership._id}>
-                      {dealership.dealership_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Status Filter */}
             <div className="space-y-2">
@@ -816,30 +760,7 @@ const DropdownMaster = () => {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Show dealership dropdown for non-primary admins */}
-            {!isPrimaryAdmin && userDealerships.length > 0 && (
-              <div>
-                <Label htmlFor="dealership_id">Dealership</Label>
-                <Select
-                  value={formData.dealership_id}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, dealership_id: value })
-                  }
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select dealership" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {userDealerships.map((dealership) => (
-                      <SelectItem key={dealership._id} value={dealership._id}>
-                        {dealership.dealership_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+          
             <div>
               <Label htmlFor="dropdown_name">Dropdown Name</Label>
               <Input
@@ -941,33 +862,6 @@ const DropdownMaster = () => {
           </DialogHeader>
           {editDropdown && (
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              {/* Show dealership dropdown for non-primary admins */}
-              {!isPrimaryAdmin && userDealerships.length > 0 && (
-                <div>
-                  <Label htmlFor="edit_dealership_id">Dealership</Label>
-                  <Select
-                    value={editDropdown.dealership_id?._id || ""}
-                    onValueChange={(value) =>
-                      setEditDropdown({
-                        ...editDropdown,
-                        dealership_id: { _id: value }, // keep it consistent
-                      })
-                    }
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select dealership" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {userDealerships.map((dealership) => (
-                        <SelectItem key={dealership._id} value={dealership._id}>
-                          {dealership.dealership_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
               <div>
                 <Label htmlFor="edit_dropdown_name">Dropdown Name</Label>
                 <Input

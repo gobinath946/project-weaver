@@ -729,22 +729,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
         )}
 
-        {/* Dealerships */}
-        {completeUser?.dealership_ids?.length > 0 && (
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground mb-2">Dealerships</p>
-            <div className="space-y-2">
-              {completeUser.dealership_ids.map((d, idx) => (
-                <Badge
-                  key={idx}
-                  className="mr-2 bg-orange-500 text-white hover:bg-orange-600"
-                >
-                  {d.dealership_name}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Docs */}
@@ -866,14 +851,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </Badge>
             )}
 
-            {completeUser?.dealership_ids?.length > 0 && (
-              <Badge className="ml-2 bg-orange-500 text-white hover:bg-orange-600">
-                Dealerships:{" "}
-                {completeUser.dealership_ids
-                  .map((d) => d.dealership_name)
-                  .join(", ")}
-              </Badge>
-            )}
+         
           </div>
 
           {/* Mobile Actions - Notification + Options */}

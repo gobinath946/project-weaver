@@ -18,9 +18,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { dealershipServices } from "@/api/services";
 import apiClient from "@/api/axios";
-import Select from "react-select";
 import { useAuth } from "@/auth/AuthContext";
 
 interface User {
@@ -31,7 +29,6 @@ interface User {
   last_name: string;
   role: string;
   is_active: boolean;
-  dealership_ids?: any[];
 }
 
 interface UserEditDialogProps {
@@ -53,7 +50,6 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
     first_name: "",
     last_name: "",
     role: "company_admin",
-    dealership_ids: [] as string[],
   });
   const [isLoading, setIsLoading] = useState(false);
   const { completeUser } = useAuth();
@@ -66,7 +62,6 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
         first_name: user.first_name,
         last_name: user.last_name,
         role: user.role,
-        dealership_ids: user.dealership_ids?.map((d) => d._id || d) || [],
       });
     }
   }, [user]);
@@ -81,41 +76,7 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
 
   const isPrimaryAdmin = userInfo?.is_primary_admin || false;
 
-  // Fetch available dealerships
-  const { data: dealerships } = useQuery({
-    queryKey: ["dealerships-dropdown", isPrimaryAdmin],
-    queryFn: async () => {
-      const response = await dealershipServices.getDealershipsDropdown();
 
-      // If user is not primary admin, filter dealerships to only show assigned ones
-      if (!isPrimaryAdmin && completeUser?.dealership_ids) {
-        const userDealershipIds = completeUser.dealership_ids.map((d: any) =>
-          typeof d === "object" ? d._id : d
-        );
-        return response.data.data.filter((dealership: any) =>
-          userDealershipIds.includes(dealership._id)
-        );
-      }
-
-      return response.data.data;
-    },
-    enabled: !!completeUser,
-  });
-
-  // Set default dealerships for non-primary admins
-  useEffect(() => {
-    if (dealerships && dealerships.length > 0) {
-      // For non-primary admins with exactly 1 dealership, auto-select it
-      if (!isPrimaryAdmin && dealerships.length === 1) {
-        setFormData((prev) => ({
-          ...prev,
-          dealership_ids: [dealerships[0]._id],
-        }));
-      }
-      // For primary admins or non-primary admins with multiple dealerships, don't auto-select
-      // (user should make the selection)
-    }
-  }, [dealerships, isPrimaryAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,18 +105,8 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
         first_name: user.first_name,
         last_name: user.last_name,
         role: user.role,
-        dealership_ids: user.dealership_ids?.map((d) => d._id || d) || [],
       });
     }
-  };
-
-  const handleDealershipToggle = (dealershipId: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      dealership_ids: checked
-        ? [...prev.dealership_ids, dealershipId]
-        : prev.dealership_ids.filter((id) => id !== dealershipId),
-    }));
   };
 
   return (
@@ -236,51 +187,6 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
                 <SelectItem value="company_admin">Company Admin</SelectItem>
               </SelectContent>
             </ShadcnSelect>
-          </div>
-
-          {/* Dealership Assignment */}
-          <div>
-            <Label>Assign Dealerships</Label>
-            <Select
-              isMulti
-              isSearchable
-              name="dealerships"
-              options={
-                dealerships?.map((d: any) => ({
-                  value: d._id,
-                  label: `${d.dealership_name}`,
-                })) || []
-              }
-              className="mt-2"
-              classNamePrefix="select"
-              value={formData.dealership_ids
-                .map((id) => {
-                  const found = dealerships?.find((d: any) => d._id === id);
-                  return found
-                    ? {
-                        value: found._id,
-                        label: `${found.dealership_name}`,
-                      }
-                    : null;
-                })
-                .filter(Boolean)}
-              onChange={(selected) =>
-                setFormData({
-                  ...formData,
-                  dealership_ids: selected.map((s: any) => s.value),
-                })
-              }
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              {isPrimaryAdmin
-                ? "Select dealerships this user can access"
-                : "You can only assign dealerships that you have access to"}
-            </p>
-            {!isPrimaryAdmin && completeUser?.dealership_ids?.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">
-                You don't have access to any dealerships
-              </p>
-            )}
           </div>
 
           <div className="flex justify-end space-x-2">

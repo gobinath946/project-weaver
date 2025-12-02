@@ -291,25 +291,7 @@ export const companyServices = {
 
 };
 
-// Dealership Services
-export const dealershipServices = {
-  getDealerships: (params?: any) =>
-    apiClient.get("/api/dealership", { params }),
 
-  getDealership: (id: string) => apiClient.get(`/api/dealership/${id}`),
-
-  createDealership: (data: any) => apiClient.post("/api/dealership", data),
-
-  updateDealership: (id: string, data: any) =>
-    apiClient.put(`/api/dealership/${id}`, data),
-
-  deleteDealership: (id: string) => apiClient.delete(`/api/dealership/${id}`),
-
-  toggleDealershipStatus: (id: string, data: any) =>
-    apiClient.patch(`/api/dealership/${id}/status`, data),
-
-  getDealershipsDropdown: () => apiClient.get("/api/dealership/dropdown"),
-};
 
 // Dropdown Services
 export const dropdownServices = {
@@ -385,7 +367,6 @@ export default {
   subscription: subscriptionServices,
   master: masterServices,
   company: companyServices,
-  dealership: dealershipServices,
   dropdown: dropdownServices,
   masterDropdown: masterDropdownServices,
   logs: logServices,

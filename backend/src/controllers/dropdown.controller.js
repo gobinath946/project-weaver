@@ -6,23 +6,13 @@ const { logEvent } = require('./logs.controller');
 // @access  Private (Company Admin/Super Admin)
 const getDropdowns = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', status = 'all', dealership_id } = req.query;
+    const { page = 1, limit = 10, search = '', status = 'all' } = req.query;
     const skip = (page - 1) * limit;
 
     // Build search query
     let searchQuery = {
       company_id: req.user.company_id
     };
-
-    // If user is not primary admin, filter by their dealership
-    if (!req.user.is_primary_admin && req.user.dealership_id) {
-      searchQuery.dealership_id = req.user.dealership_id;
-    }
-
-    // If dealership_id is explicitly provided in query, use it
-    if (dealership_id && dealership_id !== 'all') {
-      searchQuery.dealership_id = dealership_id;
-    }
 
     // Filter by status
     if (status !== 'all') {
@@ -80,15 +70,7 @@ const createDropdown = async (req, res) => {
       ]
     };
 
-    // If user is not primary admin, check duplicates within their dealership
-    if (!req.user.is_primary_admin && req.user.dealership_id) {
-      duplicateQuery.dealership_id = req.user.dealership_id;
-    }
 
-    // If dealership_id is provided in request, include it in duplicate check
-    if (req.body.dealership_id) {
-      duplicateQuery.dealership_id = req.body.dealership_id;
-    }
 
     // Check for duplicate dropdown_name or display_name
     const existingDropdown = await DropdownMaster.findOne(duplicateQuery);
@@ -106,10 +88,6 @@ const createDropdown = async (req, res) => {
       created_by: req.user.id
     });
 
-    // If user is not primary admin, assign their dealership
-    if (!req.user.is_primary_admin && req.user.dealership_id) {
-      dropdown.dealership_id = req.user.dealership_id;
-    }
 
     await dropdown.save();
 

@@ -8,9 +8,7 @@ export function useAuthEnhanced() {
   const auth = useAuth();
   const { completeUser } = auth;
 
-  /**
-   * Check if user is a primary admin (has access to all dealerships)
-   */
+
   const isPrimaryAdmin = useMemo(() => {
     return completeUser?.is_primary_admin === true;
   }, [completeUser]);
@@ -36,29 +34,7 @@ export function useAuthEnhanced() {
     return completeUser?.role === 'master_admin';
   }, [completeUser]);
 
-  /**
-   * Get dealership IDs for filtering
-   * Returns empty array if primary admin (no filtering needed)
-   * Returns user's dealership IDs if non-primary admin
-   */
-  const dealershipIdsForFilter = useMemo(() => {
-    if (!completeUser) return [];
-    
-    // Primary admin sees all dealerships - no filter needed
-    if (completeUser.is_primary_admin) {
-      return [];
-    }
-    
-    // Non-primary admin sees only assigned dealerships
-    return completeUser.dealership_ids?.map(d => d._id || d.dealership_id).filter(Boolean) || [];
-  }, [completeUser]);
 
-  /**
-   * Check if dealership filtering should be applied
-   */
-  const shouldFilterByDealership = useMemo(() => {
-    return !isPrimaryAdmin && dealershipIdsForFilter.length > 0;
-  }, [isPrimaryAdmin, dealershipIdsForFilter]);
 
   /**
    * Get company ID
@@ -89,13 +65,6 @@ export function useAuthEnhanced() {
            completeUser.role === 'company_admin';
   }, [completeUser]);
 
-  /**
-   * Get dealership names
-   */
-  const dealershipNames = useMemo(() => {
-    if (!completeUser?.dealership_ids) return [];
-    return completeUser.dealership_ids.map(d => d.dealership_name).filter(Boolean);
-  }, [completeUser]);
 
   /**
    * Get company name
@@ -112,15 +81,13 @@ export function useAuthEnhanced() {
     isCompanyAdmin,
     isMasterAdmin,
     
-    // Dealership filtering
-    dealershipIdsForFilter,
-    shouldFilterByDealership,
+ 
     
     // User info
     companyId,
     companyName,
     fullName,
-    dealershipNames,
+
     
     // Access checks
     hasDashboardAccess,

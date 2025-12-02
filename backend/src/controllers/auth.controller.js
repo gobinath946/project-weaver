@@ -362,7 +362,7 @@ const getMe = async (req, res) => {
     if (req.user.role === "master_admin") {
       user = await MasterAdmin.findById(req.user.id);
     } else {
-      user = await User.findById(req.user.id).populate("company_id").populate("dealership_ids");
+      user = await User.findById(req.user.id).populate("company_id");
       userType = "user";
     }
 
@@ -381,7 +381,6 @@ const getMe = async (req, res) => {
       role: user.role,
       type: "company",
       company_id: user.company_id,
-      dealership_ids: user.dealership_ids,
       is_first_login: user.is_first_login || false,
       is_primary_admin: user.is_primary_admin,
     };

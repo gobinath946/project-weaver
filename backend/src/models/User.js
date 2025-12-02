@@ -53,10 +53,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
-  dealership_ids: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Dealership'
-  }],
   is_active: {
     type: Boolean,
     default: true

@@ -36,19 +36,7 @@ interface Company {
   s3_config: S3Config;
 }
 
-interface Dealership {
-  _id: string;
-  dealership_name: string;
-  dealership_address: string;
-  dealership_email: string;
-  company_id: string;
-  is_active: boolean;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  dealership_id: string;
-  __v: number;
-}
+
 
 export interface CompleteUser {
   id: string;
@@ -56,7 +44,6 @@ export interface CompleteUser {
   role: "master_admin" | "company_super_admin" | "company_admin";
   type?: string;
   company_id: Company;
-  dealership_ids: Dealership[];
   is_first_login?: boolean;
   is_primary_admin?: boolean;
   subscription_modal_required?: boolean;
@@ -138,7 +125,7 @@ const [completeUser, setCompleteUser] = useState<CompleteUser | null>(null);
       sessionStorage.setItem(
         "user",
         JSON.stringify(
-          (({ company_id, dealership_ids, ...rest }) => rest)(userData)
+          (({ company_id, ...rest }) => rest)(userData)
         )
       );
     } catch (error) {
