@@ -20,6 +20,8 @@ const customModuleRoutes = require("./routes/customModule.routes");
 
 const errorHandler = require("./middleware/error");
 const { logRequest } = require("./controllers/logs.controller");
+const { startGlobalLogCleanupCron } = require("./jobs/globalLogsCron");
+
 
 // Connect to database
 connectDB();
@@ -86,6 +88,10 @@ app.get("/socket/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Start CRON jobs
+startGlobalLogCleanupCron();
+
 
 // API Routes
 app.use("/api/auth", authRoutes);
