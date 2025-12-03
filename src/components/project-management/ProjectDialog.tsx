@@ -39,6 +39,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, X, Check, ChevronsUpDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PROJECT_STATUS, STATUS_COLORS } from "@/constants/projectConstants";
 
 interface ProjectDialogProps {
   open: boolean;
@@ -224,6 +225,34 @@ const ProjectDialog = ({ open, onClose, project, onSuccess }: ProjectDialogProps
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Status - Only show in edit mode */}
+            {isEdit && (
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROJECT_STATUS.map((status) => {
+                      const colors = STATUS_COLORS[status] || { bg: "bg-gray-500/20", text: "text-gray-500" };
+                      return (
+                        <SelectItem key={status} value={status}>
+                          <div className="flex items-center gap-2">
+                            <div className={cn("w-2 h-2 rounded-full", colors.bg.replace("/20", ""))} />
+                            {status}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
