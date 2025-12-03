@@ -152,51 +152,12 @@ ProjectSchema.pre('save', function(next) {
   next();
 });
 
-// Helper function to generate initials from project title
-const generateInitials = (title) => {
-  if (!title) return 'PRJ';
-  
-  // Split by spaces and get first letter of each word
-  const words = title.trim().split(/\s+/);
-  let initials = words
-    .map(word => word.charAt(0).toUpperCase())
-    .join('');
-  
-  // If only one word or initials too short, use first 3 chars
-  if (initials.length < 2) {
-    initials = title.substring(0, 3).toUpperCase();
-  }
-  
-  // Limit to max 5 characters
-  if (initials.length > 5) {
-    initials = initials.substring(0, 5);
-  }
-  
-  return initials;
-};
-
-// Auto-generate project_id before saving based on title initials
+// Auto-generate project_id before saving
 ProjectSchema.pre('save', async function(next) {
-  if (!this.project_id && this.title) {
+  if (!this.project_id) {
     try {
-      const initials = generateInitials(this.title);
-      
-      // Find the highest number for this prefix in this company
-      const existingProjects = await mongoose.model('Project').find({
-        company_id: this.company_id,
-        project_id: { $regex: `^${initials}-\\d+$` }
-      }).select('project_id');
-      
-      let maxNumber = 0;
-      existingProjects.forEach(project => {
-        const match = project.project_id.match(new RegExp(`^${initials}-(\\d+)$`));
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (num > maxNumber) maxNumber = num;
-        }
-      });
-      
-      this.project_id = `${initials}-${maxNumber + 1}`;
+      const count = await mongoose.model('Project').countDocuments({ company_id: this.company_id });
+      this.project_id = `PR-${String(count + 1).padStart(3, '0')}`;
     } catch (error) {
       next(error);
     }
