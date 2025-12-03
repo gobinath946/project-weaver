@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import { ThemeProvider } from "@/components/theme-provider";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -176,21 +177,23 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            {isMobile ? (
-              <PullToRefresh onRefresh={handleRefresh}>          
-                {routesContent}
-              </PullToRefresh>
-            ) : (
-              routesContent
-            )}
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+      <ThemeProvider defaultTheme="system" storageKey="project-hub-theme">
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              {isMobile ? (
+                <PullToRefresh onRefresh={handleRefresh}>          
+                  {routesContent}
+                </PullToRefresh>
+              ) : (
+                routesContent
+              )}
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

@@ -3,203 +3,365 @@
 @tailwind utilities;
 
 /* =========================
-   🎨 Global Theme Variables
+   🎨 Modern Theme Variables - Project Management System
    ========================= */
 @layer base {
   :root {
-    /* Automotive Professional Palette */
-    --background: 240 6% 97%;
-    --foreground: 240 10% 8%;
+    /* Modern Light Theme - Professional & Clean */
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 8%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 8%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary - Professional Blue */
-    --primary: 218 89% 51%;
+    /* Primary - Vibrant Indigo */
+    --primary: 238 84% 67%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Steel Gray */
-    --secondary: 215 20% 65%;
-    --secondary-foreground: 240 10% 8%;
+    /* Secondary - Soft Slate */
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Accent - Electric Blue */
-    --accent: 205 100% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Electric Cyan */
+    --accent: 192 91% 50%;
+    --accent-foreground: 222 47% 11%;
 
     /* Muted */
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
 
-    /* Destructive - Warning Red */
-    --destructive: 0 85% 60%;
+    /* Destructive - Modern Red */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Success - Professional Green */
-    --success: 142 76% 36%;
+    /* Success - Emerald */
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
     /* Warning - Amber */
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 222 47% 11%;
 
-    /* Borders */
+    /* Info - Sky Blue */
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 218 89% 51%;
+    --ring: 238 84% 67%;
 
-    /* Automotive Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(218, 89%, 51%) 0%, hsl(205, 100%, 60%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(215, 20%, 65%) 0%, hsl(220, 14%, 96%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(240, 10%, 8%) 0%, hsl(218, 89%, 51%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(220, 14%, 96%) 100%);
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 238 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 238 84% 67%;
+
+    /* Glass Effect Variables */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+    /* Modern Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(238, 84%, 67%) 0%, hsl(192, 91%, 50%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(215, 25%, 27%) 0%, hsl(222, 47%, 11%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(192, 91%, 50%) 0%, hsl(160, 84%, 39%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(0, 84%, 60%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsla(238, 84%, 67%, 0.1) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsla(192, 91%, 50%, 0.1) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsla(160, 84%, 39%, 0.1) 0px, transparent 50%);
 
     --radius: 0.75rem;
+    --transition-fast: 150ms;
+    --transition-normal: 250ms;
+    --transition-slow: 350ms;
   }
 
   .dark {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 95%;
-    --card: 240 10% 6%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 218 89% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 215 20% 25%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 220 14% 14%;
-    --muted-foreground: 220 9% 65%;
-    --accent: 205 100% 60%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 18%;
-    --input: 220 13% 18%;
-    --ring: 218 89% 51%;
+    /* Modern Dark Theme - Sleek & Professional */
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary - Vibrant Indigo (slightly brighter for dark) */
+    --primary: 238 84% 70%;
+    --primary-foreground: 222 47% 6%;
+
+    /* Secondary - Lighter Slate */
+    --secondary: 215 25% 40%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Accent - Electric Cyan */
+    --accent: 192 91% 55%;
+    --accent-foreground: 222 47% 6%;
+
+    /* Muted */
+    --muted: 222 47% 14%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Success */
+    --success: 160 84% 45%;
+    --success-foreground: 222 47% 6%;
+
+    /* Warning */
+    --warning: 38 92% 55%;
+    --warning-foreground: 222 47% 6%;
+
+    /* Info */
+    --info: 199 89% 55%;
+    --info-foreground: 222 47% 6%;
+
+    /* Borders & Inputs */
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 238 84% 70%;
+
+    /* Sidebar Dark */
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 238 84% 70%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 222 47% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 238 84% 70%;
+
+    /* Glass Effect Variables - Dark */
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    /* Dark Gradients */
+    --gradient-glass: linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(30,41,59,0.6) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsla(238, 84%, 70%, 0.15) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsla(192, 91%, 55%, 0.15) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsla(160, 84%, 45%, 0.15) 0px, transparent 50%);
   }
 }
 
 /* =========================
-   🔤 Responsive Typography
+   🔤 Modern Typography
    ========================= */
 @layer base {
   html {
-    font-size: 14px; /* default = large screen */
+    font-size: 14px;
+    scroll-behavior: smooth;
   }
 
-  @media (max-width: 1024px) { /* md */
-    html {
-      font-size: 13px;
-    }
+  @media (max-width: 1024px) {
+    html { font-size: 13px; }
   }
 
-  @media (max-width: 640px) { /* sm */
-    html {
-      font-size: 12px;
-    }
+  @media (max-width: 640px) {
+    html { font-size: 12px; }
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    line-height: 1.5;
-    font-size: 1rem; /* relative to html */
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    background-image: var(--gradient-mesh);
+    background-attachment: fixed;
   }
 
-  h1 {
-    font-size: 2.5rem; /* scales with html size */
-    line-height: 1.2;
-    @apply font-bold tracking-tight;
-  }
-
-  h2 {
-    font-size: 2rem;
-    line-height: 1.3;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     @apply font-semibold tracking-tight;
   }
 
-  h3 {
-    font-size: 1.5rem;
-    line-height: 1.35;
-    @apply font-semibold;
-  }
-
-  h4, h5, h6 {
-    font-size: 1.25rem;
-    line-height: 1.4;
-    @apply font-medium;
-  }
-
-  p, span, li, a, button, input, textarea {
-    font-size: 1rem; /* will shrink according to html size */
-    line-height: 1.5;
-  }
+  h1 { @apply text-4xl md:text-5xl; }
+  h2 { @apply text-3xl md:text-4xl; }
+  h3 { @apply text-2xl md:text-3xl; }
+  h4 { @apply text-xl md:text-2xl; }
 
   * {
     @apply border-border;
   }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
+  }
 }
 
 /* =========================
-   🧩 Custom Components
+   🧩 Glass Morphism Effects
+   ========================= */
+@layer components {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-subtle {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 
+      var(--glass-shadow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-input {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+  }
+}
+
+/* =========================
+   🎨 Gradient Utilities
    ========================= */
 @layer components {
   .gradient-primary { background: var(--gradient-primary); }
   .gradient-secondary { background: var(--gradient-secondary); }
-  .gradient-hero { background: var(--gradient-hero); }
-  .gradient-card { background: var(--gradient-card); }
+  .gradient-accent { background: var(--gradient-accent); }
+  .gradient-warm { background: var(--gradient-warm); }
+  .gradient-glass { background: var(--gradient-glass); }
 
-  .glass-effect {
-    backdrop-filter: blur(12px);
-    background: hsla(0, 0%, 100%, 0.8);
-    border: 1px solid hsla(220, 13%, 91%, 0.3);
-  }
-
-  .automotive-shadow {
-    box-shadow: 
-      0 1px 3px 0 rgba(0, 0, 0, 0.1),
-      0 1px 2px 0 rgba(0, 0, 0, 0.06),
-      0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  }
-
-  .hero-text {
-    background: linear-gradient(135deg, hsl(240, 10%, 8%) 0%, hsl(218, 89%, 51%) 100%);
+  .gradient-text {
+    background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .animate-float { animation: float 3s ease-in-out infinite; }
-  .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
-  .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
-  
-  /* Landing Page Animations */
-  .hover-scale {
-    transition: transform 0.3s ease;
+  .gradient-border {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
   }
-  .hover-scale:hover {
-    transform: scale(1.05);
-  }
-  
-  .bg-grid-pattern {
-    background-image: 
-      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
-    background-size: 40px 40px;
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--gradient-primary);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 }
 
 /* =========================
-   🎞️ Keyframes
+   ✨ Modern Shadows
    ========================= */
+@layer components {
+  .shadow-glow {
+    box-shadow: 
+      0 0 20px hsl(var(--primary) / 0.15),
+      0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-glow-accent {
+    box-shadow: 
+      0 0 20px hsl(var(--accent) / 0.2),
+      0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-elevated {
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 4px 8px rgba(0, 0, 0, 0.05),
+      0 16px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-soft {
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.04),
+      0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* =========================
+   🎞️ Modern Animations
+   ========================= */
+@layer components {
+  .animate-float { animation: float 3s ease-in-out infinite; }
+  .animate-pulse-soft { animation: pulseSoft 2s ease-in-out infinite; }
+  .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
+  .animate-slide-down { animation: slideDown 0.5s ease-out forwards; }
+  .animate-slide-in-right { animation: slideInRight 0.3s ease-out forwards; }
+  .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+  .animate-scale-in { animation: scaleIn 0.2s ease-out forwards; }
+  .animate-shimmer { animation: shimmer 2s linear infinite; }
+  .animate-glow { animation: glow 2s ease-in-out infinite alternate; }
+
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300;
+  }
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  .hover-glow:hover {
+    box-shadow: 0 0 24px hsl(var(--primary) / 0.3);
+  }
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes fadeIn {
@@ -207,37 +369,83 @@
   to { opacity: 1; }
 }
 
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 10px hsl(var(--primary) / 0.2); }
+  to { box-shadow: 0 0 20px hsl(var(--primary) / 0.4); }
+}
+
 /* =========================
-   🖱️ Professional Scrollbar
+   🖱️ Modern Scrollbar
    ========================= */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary));
+  background: hsl(var(--muted) / 0.5);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--accent));
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, hsl(var(--primary) / 0.6), hsl(var(--accent) / 0.6));
+  border-radius: 4px;
+  transition: background 0.3s;
 }
 
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)));
+}
 
-/* Make scrollbar thinner ONLY for this scroll area */
 .custom-scrollbar::-webkit-scrollbar {
-  height: 4px; /* adjust as needed */
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: hsl(var(--primary) / 0.4);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* =========================
+   🎯 Focus States
+   ========================= */
+@layer base {
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+}
+
+/* =========================
+   📱 Responsive Utilities
+   ========================= */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .bg-dots-pattern {
+    background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
 }

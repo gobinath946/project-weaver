@@ -18,33 +18,42 @@ export const ViewToggle = ({
   className 
 }: ViewToggleProps) => {
   return (
-    <div className={cn("flex items-center gap-1 bg-muted p-1 rounded-lg", className)}>
+    <div className={cn("flex items-center gap-1 bg-muted/50 backdrop-blur-sm p-1 rounded-xl border border-border/50", className)}>
       <Button
-        variant={view === "list" ? "secondary" : "ghost"}
+        variant={view === "list" ? "default" : "ghost"}
         size="sm"
         onClick={() => onViewChange("list")}
-        className="h-8 px-3"
+        className={cn(
+          "h-8 px-3 rounded-lg transition-all duration-200",
+          view === "list" && "shadow-sm"
+        )}
       >
-        <List className="h-4 w-4 mr-1" />
+        <List className="h-4 w-4 mr-1.5" />
         List
       </Button>
       <Button
-        variant={view === "kanban" ? "secondary" : "ghost"}
+        variant={view === "kanban" ? "default" : "ghost"}
         size="sm"
         onClick={() => onViewChange("kanban")}
-        className="h-8 px-3"
+        className={cn(
+          "h-8 px-3 rounded-lg transition-all duration-200",
+          view === "kanban" && "shadow-sm"
+        )}
       >
-        <Kanban className="h-4 w-4 mr-1" />
+        <Kanban className="h-4 w-4 mr-1.5" />
         Kanban
       </Button>
       {showCard && (
         <Button
-          variant={view === "card" ? "secondary" : "ghost"}
+          variant={view === "card" ? "default" : "ghost"}
           size="sm"
           onClick={() => onViewChange("card")}
-          className="h-8 px-3"
+          className={cn(
+            "h-8 px-3 rounded-lg transition-all duration-200",
+            view === "card" && "shadow-sm"
+          )}
         >
-          <LayoutGrid className="h-4 w-4 mr-1" />
+          <LayoutGrid className="h-4 w-4 mr-1.5" />
           Card
         </Button>
       )}

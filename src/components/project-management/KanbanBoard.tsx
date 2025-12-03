@@ -56,17 +56,17 @@ const columnColors: Record<string, string> = {
 
 export const KanbanBoard = ({ columns, type, onItemClick, onStatusChange }: KanbanBoardProps) => {
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
       {columns.map((column) => (
         <div 
           key={column.id} 
           className="flex-shrink-0 w-80"
         >
-          <Card className={cn("border-t-4", columnColors[column.title] || "border-t-gray-500")}>
+          <Card variant="glass" className={cn("border-t-4 transition-all duration-300 hover:shadow-lg", columnColors[column.title] || "border-t-gray-500")}>
             <CardHeader className="py-3 px-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">{column.title}</CardTitle>
-                <Badge variant="secondary" className="text-xs">
+                <CardTitle className="text-sm font-semibold">{column.title}</CardTitle>
+                <Badge variant="secondary" className="text-xs font-medium">
                   {column.items.length}
                 </Badge>
               </div>
@@ -109,7 +109,7 @@ const KanbanCard = ({ item, type, onClick }: KanbanCardProps) => {
   
   return (
     <Card 
-      className="cursor-pointer hover:bg-accent/50 transition-colors"
+      className="cursor-pointer hover:bg-accent/50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
       onClick={onClick}
     >
       <CardContent className="p-3 space-y-2">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -52,7 +52,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ThemeToggle } from "@/components/theme-toggle";
 import logo from "@/assests/logo/android-chrome-512x512.png";
+
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -109,14 +111,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [currentModule, setCurrentModule] = useState<string | null>(null);
 
   const sidebarCookieKey = getUserSpecificKey("sidebar-collapsed", user?.email);
-  const expandedMenusCookieKey = getUserSpecificKey(
-    "expanded-menus",
-    user?.email
-  );
+  const expandedMenusCookieKey = getUserSpecificKey("expanded-menus", user?.email);
+
 
   useEffect(() => {
     if (user?.email) {
-      // Only apply desktop collapse state from cookie
       if (!isMobileMenuOpen) {
         const savedCollapsedState = getCookie(sidebarCookieKey);
         if (savedCollapsedState !== null) {
@@ -137,12 +136,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   }, [user?.email, sidebarCookieKey, expandedMenusCookieKey, isMobileMenuOpen]);
 
   const handleSidebarToggle = (state?: boolean, isMobile: boolean = false) => {
-    // If mobile menu, always force false
     const newCollapsedState = isMobile ? false : state;
     setIsSidebarCollapsed(newCollapsedState);
     setCookie(sidebarCookieKey, newCollapsedState.toString());
 
-    // If collapsing (desktop), also collapse all expanded menus
     if (!isMobile && newCollapsedState) {
       setExpandedMenus(new Set());
       setCookie(expandedMenusCookieKey, "[]");
@@ -160,10 +157,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       newExpandedMenus.add(menuKey);
     }
     setExpandedMenus(newExpandedMenus);
-    setCookie(
-      expandedMenusCookieKey,
-      JSON.stringify(Array.from(newExpandedMenus))
-    );
+    setCookie(expandedMenusCookieKey, JSON.stringify(Array.from(newExpandedMenus)));
   };
 
   const { data: userModule } = useQuery({
@@ -174,11 +168,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     },
   });
 
+
   useEffect(() => {
-    if (
-      user?.subscription_modal_force &&
-      user?.role === "company_super_admin"
-    ) {
+    if (user?.subscription_modal_force && user?.role === "company_super_admin") {
       setShowSubscriptionModal(true);
     }
   }, [user]);
@@ -192,11 +184,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         { icon: CreditCard, label: "Plans", path: "/master/plans" },
         { icon: Globe, label: "Master Dropdown", path: "/master/dropdowns" },
         { icon: Cog, label: "Custom Module", path: "/master/custom-modules" },
-        {
-          icon: Wrench,
-          label: "Website Maintenance",
-          path: "/master/maintenance",
-        },
+        { icon: Wrench, label: "Website Maintenance", path: "/master/maintenance" },
         { icon: FileText, label: "Global Logs", path: "/master/global-logs" },
         { icon: Settings, label: "Settings", path: "/master/settings" },
       ];
@@ -204,73 +192,33 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     if (user?.role === "company_super_admin") {
       return [
+        { icon: Home, label: "Dashboard", path: "/company/dashboard", module: "project_dashboard" },
+        { icon: Users, label: "Users", path: "/company/users", module: "project_user" },
+        { icon: Shield, label: "Permission", path: "/company/permissions", module: "project_permission" },
+        { icon: Database, label: "Dropdown Master", path: "/company/dropdown-master", module: "dropdown_master" },
         {
-          icon: Home,
-          label: "Dashboard",
-          path: "/company/dashboard",
-          module: "project_dashboard",
-        },
-        {
-          icon: Users,
-          label: "Users",
-          path: "/company/users",
-          module: "project_user",
-        },
-        {
-          icon: Shield,
-          label: "Permission",
-          path: "/company/permissions",
-          module: "project_permission",
-        },
-
-        {
-          icon: Database,
-          label: "Dropdown Master",
-          path: "/company/dropdown-master",
-          module: "dropdown_master",
-        },
-
-        {
-          icon: ClipboardList, // or LayoutDashboard
+          icon: ClipboardList,
           label: "Project Management",
           module: "project_management",
           children: [
-            {
-              icon: KanbanSquare,
-              label: "Projects",
-              path: "/company/project_list",
-            },
+            { icon: KanbanSquare, label: "Projects", path: "/company/project_list" },
             { icon: ListCheck, label: "Tasks", path: "/company/task_list" },
             { icon: Bug, label: "Bugs", path: "/company/bug_list" },
             { icon: Timer, label: "TimeLogs", path: "/company/timelog_list" },
           ],
         },
-        {
-          icon: UserCog,
-          label: "Settings",
-          path: "/company/settings",
-          module: "company_settings",
-        },
+        { icon: UserCog, label: "Settings", path: "/company/settings", module: "company_settings" },
       ];
     }
 
     return [
+      { icon: BarChart3, label: "Dashboard", path: "/company/dashboard", module: "project_dashboard" },
       {
-        icon: BarChart3,
-        label: "Dashboard",
-        path: "/company/dashboard",
-        module: "project_dashboard",
-      },
-      {
-        icon: ClipboardList, // or LayoutDashboard
+        icon: ClipboardList,
         label: "Project Management",
         module: "project_management",
         children: [
-          {
-            icon: KanbanSquare,
-            label: "Projects",
-            path: "/company/project_list",
-          },
+          { icon: KanbanSquare, label: "Projects", path: "/company/project_list" },
           { icon: ListCheck, label: "Tasks", path: "/company/task_list" },
           { icon: Bug, label: "Bugs", path: "/company/bug_list" },
           { icon: Timer, label: "TimeLogs", path: "/company/timelog_list" },
@@ -278,6 +226,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       },
     ];
   };
+
 
   const getFilteredNavigationItems = (): NavigationItem[] => {
     const allNavigationItems = getNavigationItems();
@@ -291,9 +240,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     }
 
     return allNavigationItems.filter((item) => {
-      if (!item.module) {
-        return true;
-      }
+      if (!item.module) return true;
       return userModule.data.module.includes(item.module);
     });
   };
@@ -307,9 +254,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       userModule.data.module.length === 0);
 
   const isMenuActive = (item: NavigationItem): boolean => {
-    if (item.path && location.pathname === item.path) {
-      return true;
-    }
+    if (item.path && location.pathname === item.path) return true;
     if (item.children) {
       return item.children.some((child) => child.path === location.pathname);
     }
@@ -324,9 +269,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       navigationItems.forEach((item, index) => {
         if (item.children) {
           const menuKey = `menu-${index}`;
-          const isChildActive = item.children.some(
-            (child) => child.path === location.pathname
-          );
+          const isChildActive = item.children.some((child) => child.path === location.pathname);
 
           if (isChildActive && !expandedMenus.has(menuKey)) {
             newExpandedMenus.add(menuKey);
@@ -337,26 +280,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       if (hasChanges) {
         setExpandedMenus(newExpandedMenus);
-        setCookie(
-          expandedMenusCookieKey,
-          JSON.stringify(Array.from(newExpandedMenus))
-        );
+        setCookie(expandedMenusCookieKey, JSON.stringify(Array.from(newExpandedMenus)));
       }
     }
   }, [location.pathname, isSidebarCollapsed, expandedMenusCookieKey]);
 
-  // Detect current module based on location and fetch permissions
+
   useEffect(() => {
-    // Only fetch permissions for company_admin and non-primary company_super_admin
     const shouldFetchPermissions =
       user?.role === "company_admin" ||
       (user?.role === "company_super_admin" && !completeUser?.is_primary_admin);
 
-    if (!shouldFetchPermissions) {
-      return;
-    }
+    if (!shouldFetchPermissions) return;
 
-    // Find the current module based on location
     let detectedModule: string | null = null;
     for (const item of navigationItems) {
       if (item.module) {
@@ -365,9 +301,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           break;
         }
         if (item.children) {
-          const childMatch = item.children.find(
-            (child) => child.path === location.pathname
-          );
+          const childMatch = item.children.find((child) => child.path === location.pathname);
           if (childMatch) {
             detectedModule = item.module;
             break;
@@ -376,7 +310,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
     }
 
-    // If module changed, fetch permissions for that module
     if (detectedModule && detectedModule !== currentModule) {
       setCurrentModule(detectedModule);
 
@@ -390,41 +323,30 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           console.error("Error fetching permissions:", error);
         });
     }
-  }, [
-    location.pathname,
-    user?.role,
-    completeUser?.is_primary_admin,
-    navigationItems,
-    currentModule,
-  ]);
+  }, [location.pathname, user?.role, completeUser?.is_primary_admin, navigationItems, currentModule]);
 
   const NoAccessContent = () => (
     <div className="flex-1 flex items-center justify-center">
-      <div className="text-center p-8 max-w-md">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-          <Lock className="h-10 w-10 text-muted-foreground" />
+      <div className="text-center p-8 max-w-md glass-card rounded-2xl">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+          <Lock className="h-10 w-10 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
+        <h2 className="text-2xl font-bold mb-4 gradient-text">Access Restricted</h2>
         <p className="text-muted-foreground mb-4">
-          You don't have access to any modules. Please contact your
-          administrator to get the necessary permissions.
+          You don't have access to any modules. Please contact your administrator to get the necessary permissions.
         </p>
         <p className="text-sm text-muted-foreground">
-          Administrator can assign module permissions from the User Management
-          section.
+          Administrator can assign module permissions from the User Management section.
         </p>
       </div>
     </div>
   );
 
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const popoverContent = document.querySelector(
-        "[data-radix-popover-content]"
-      );
-      const popoverTrigger = document.querySelector(
-        "[data-radix-popover-trigger]"
-      );
+      const popoverContent = document.querySelector("[data-radix-popover-content]");
+      const popoverTrigger = document.querySelector("[data-radix-popover-trigger]");
 
       if (
         popoverContent &&
@@ -438,21 +360,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     if (clickedMenu) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [clickedMenu]);
 
   const handleMenuClick = (menuKey: string, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-
-    if (clickedMenu === menuKey) {
-      setClickedMenu(null);
-    } else {
-      setClickedMenu(menuKey);
-    }
+    setClickedMenu(clickedMenu === menuKey ? null : menuKey);
   };
 
   const renderCollapsedMenuItem = (item: NavigationItem, index: number) => {
@@ -467,54 +382,38 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <div>
-                <Popover
-                  open={isOpen}
-                  onOpenChange={(open) => {
-                    if (!open) {
-                      setClickedMenu(null);
-                    }
-                  }}
-                >
+                <Popover open={isOpen} onOpenChange={(open) => { if (!open) setClickedMenu(null); }}>
                   <PopoverTrigger asChild>
                     <button
-                      className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 cursor-pointer w-full ${
+                      className={`flex items-center justify-center p-3 rounded-xl transition-all duration-300 cursor-pointer w-full group ${
                         isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          ? "bg-gradient-to-r from-primary to-accent text-white shadow-glow"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-soft"
                       }`}
                       onClick={(e) => handleMenuClick(menuKey, e)}
                       type="button"
                     >
-                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <Icon className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent
-                    side="right"
-                    className="w-48 p-2"
-                    sideOffset={8}
-                    align="start"
-                  >
+                  <PopoverContent side="right" className="w-52 p-2" sideOffset={8} align="start">
                     <div className="space-y-1">
-                      <div className="font-medium text-sm px-2 py-1 border-b mb-2">
+                      <div className="font-semibold text-sm px-3 py-2 border-b border-border/50 mb-2 text-foreground">
                         {item.label}
                       </div>
                       {item.children.map((child, childIndex) => {
                         const ChildIcon = child.icon;
                         const isChildActive = location.pathname === child.path;
-
                         return (
                           <Link
                             key={childIndex}
                             to={child.path || "#"}
-                            className={`flex items-center p-2 rounded-md transition-colors text-sm ${
+                            className={`flex items-center p-2.5 rounded-lg transition-all duration-200 text-sm ${
                               isChildActive
                                 ? "bg-primary/10 text-primary font-medium"
-                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
-                            onClick={() => {
-                              setIsMobileMenuOpen(false);
-                              setClickedMenu(null);
-                            }}
+                            onClick={() => { setIsMobileMenuOpen(false); setClickedMenu(null); }}
                           >
                             <ChildIcon className="h-4 w-4 mr-3 flex-shrink-0" />
                             <span>{child.label}</span>
@@ -526,43 +425,35 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </Popover>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{item.label}</p>
-            </TooltipContent>
+            <TooltipContent side="right"><p>{item.label}</p></TooltipContent>
           </Tooltip>
         </div>
       );
-    } else {
-      return (
-        <Tooltip key={index} delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Link
-              to={item.path || "#"}
-              className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                setClickedMenu(null);
-              }}
-            >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>{item.label}</p>
-          </TooltipContent>
-        </Tooltip>
-      );
     }
+
+
+    return (
+      <Tooltip key={index} delayDuration={0}>
+        <TooltipTrigger asChild>
+          <Link
+            to={item.path || "#"}
+            className={`flex items-center justify-center p-3 rounded-xl transition-all duration-300 group ${
+              isActive
+                ? "bg-gradient-to-r from-primary to-accent text-white shadow-glow"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-soft"
+            }`}
+            onClick={() => { setIsMobileMenuOpen(false); setClickedMenu(null); }}
+          >
+            <Icon className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right"><p>{item.label}</p></TooltipContent>
+      </Tooltip>
+    );
   };
 
   const renderNavigationItem = (item: NavigationItem, index: number) => {
-    if (isSidebarCollapsed) {
-      return renderCollapsedMenuItem(item, index);
-    }
+    if (isSidebarCollapsed) return renderCollapsedMenuItem(item, index);
 
     const Icon = item.icon;
     const isActive = isMenuActive(item);
@@ -571,49 +462,39 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     if (item.children && item.children.length > 0) {
       return (
-        <Collapsible
-          key={menuKey}
-          open={isExpanded}
-          onOpenChange={() => toggleMenuExpansion(menuKey)}
-        >
+        <Collapsible key={menuKey} open={isExpanded} onOpenChange={() => toggleMenuExpansion(menuKey)}>
           <CollapsibleTrigger
-            className={`w-full flex items-center rounded-lg transition-all duration-200 p-3 space-x-3 justify-between ${
+            className={`w-full flex items-center rounded-xl transition-all duration-300 p-3 space-x-3 justify-between group ${
               isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-gradient-to-r from-primary to-accent text-white shadow-glow"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-soft"
             }`}
           >
             <div className="flex items-center space-x-3">
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              <span>{item.label}</span>
+              <Icon className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
+              <span className="font-medium">{item.label}</span>
             </div>
             <div className="ml-auto">
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
+              {isExpanded ? <ChevronDown className="h-4 w-4 transition-transform duration-300" /> : <ChevronRight className="h-4 w-4 transition-transform duration-300" />}
             </div>
           </CollapsibleTrigger>
-
-          <CollapsibleContent className="overflow-hidden transition-all duration-300 ease-in-out data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-            <div className="ml-6 mt-1 space-y-1">
+          <CollapsibleContent className="overflow-hidden transition-all duration-300 ease-out data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+            <div className="ml-6 mt-2 space-y-1 border-l-2 border-border/50 pl-4">
               {item.children.map((child, childIndex) => {
                 const ChildIcon = child.icon;
                 const isChildActive = location.pathname === child.path;
-
                 return (
                   <Link
                     key={childIndex}
                     to={child.path || "#"}
-                    className={`flex items-center p-2 rounded-lg transition-colors text-sm ${
+                    className={`flex items-center p-2.5 rounded-lg transition-all duration-200 text-sm group ${
                       isChildActive
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        ? "bg-primary/10 text-primary font-medium shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <ChildIcon className="h-4 w-4 mr-3" />
+                    <ChildIcon className="h-4 w-4 mr-3 transition-transform duration-200 group-hover:scale-110" />
                     <span>{child.label}</span>
                   </Link>
                 );
@@ -622,94 +503,81 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </CollapsibleContent>
         </Collapsible>
       );
-    } else {
-      return (
-        <Link
-          key={index}
-          to={item.path || "#"}
-          className={`flex items-center rounded-lg transition-all duration-200 p-3 space-x-3 ${
-            isActive
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-          }`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <Icon className="h-5 w-5 flex-shrink-0" />
-          <span>{item.label}</span>
-        </Link>
-      );
     }
+
+
+    return (
+      <Link
+        key={index}
+        to={item.path || "#"}
+        className={`flex items-center rounded-xl transition-all duration-300 p-3 space-x-3 group ${
+          isActive
+            ? "bg-gradient-to-r from-primary to-accent text-white shadow-glow"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-soft"
+        }`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <Icon className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
+        <span className="font-medium">{item.label}</span>
+      </Link>
+    );
   };
 
   const Sidebar = ({ className = "" }) => (
     <div
-      className={`flex flex-col h-full bg-card border-r transition-all duration-300 ease-in-out ${className} ${
-        isSidebarCollapsed ? "w-16" : "w-64"
+      className={`flex flex-col h-full glass-card border-r border-border/30 transition-all duration-300 ease-out ${className} ${
+        isSidebarCollapsed ? "w-[72px]" : "w-64"
       }`}
     >
-      <div className="p-4 flex items-center justify-between">
-        <div
-          className={`flex items-center transition-all duration-300 ${
-            isSidebarCollapsed ? "justify-center w-full" : "space-x-2"
-          }`}
-        >
+      {/* Logo Section */}
+      <div className="p-4 flex items-center justify-between border-b border-border/30">
+        <div className={`flex items-center transition-all duration-300 ${isSidebarCollapsed ? "justify-center w-full" : "space-x-3"}`}>
           {!isSidebarCollapsed && (
             <>
-              <img src={logo} className="h-6 w-6 text-primary" />
-              <span className="text-lg font-bold">Project Hub</span>
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-glow">
+                <img src={logo} className="h-6 w-6" alt="Logo" />
+              </div>
+              <span className="text-lg font-bold gradient-text">Project Hub</span>
             </>
           )}
           {isSidebarCollapsed && (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <div className="flex items-center justify-center">
-                  <img src={logo} className="h-6 w-6 text-primary" />
+                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-glow">
+                  <img src={logo} className="h-6 w-6" alt="Logo" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Project Hub</p>
-              </TooltipContent>
+              <TooltipContent side="right"><p>Project Hub</p></TooltipContent>
             </Tooltip>
           )}
         </div>
       </div>
 
-      <nav className="flex-1 px-2 space-y-1 overflow-y-auto py-4">
+      {/* Navigation */}
+      <nav className="flex-1 px-2 space-y-1 overflow-y-auto py-4 custom-scrollbar">
         {navigationItems.length > 0 ? (
           <TooltipProvider>
-            {navigationItems.map((item, index) =>
-              renderNavigationItem(item, index)
-            )}
+            {navigationItems.map((item, index) => renderNavigationItem(item, index))}
           </TooltipProvider>
         ) : (
-          <div
-            className={`text-center p-4 text-muted-foreground transition-all duration-300 ${
-              isSidebarCollapsed ? "px-2" : ""
-            }`}
-          >
-            <Lock className="h-6 w-6 mx-auto mb-2" />
-            {!isSidebarCollapsed && (
-              <p className="text-sm">No modules accessible</p>
-            )}
+          <div className={`text-center p-4 text-muted-foreground transition-all duration-300 ${isSidebarCollapsed ? "px-2" : ""}`}>
+            <Lock className="h-6 w-6 mx-auto mb-2 opacity-50" />
+            {!isSidebarCollapsed && <p className="text-sm">No modules accessible</p>}
           </div>
         )}
       </nav>
 
-      <div className="p-3 border-t">
-        <div
-          className={`flex items-center transition-all duration-300 ${
-            isSidebarCollapsed ? "justify-center" : "space-x-3 mb-3"
-          }`}
-        >
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <User className="h-4 w-4 text-primary" />
+
+      {/* User Section */}
+      <div className="p-3 border-t border-border/30">
+        <div className={`flex items-center transition-all duration-300 ${isSidebarCollapsed ? "justify-center" : "space-x-3 mb-3"}`}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0 ring-2 ring-primary/20">
+            <User className="h-5 w-5 text-primary" />
           </div>
           {!isSidebarCollapsed && (
-            <div className="overflow-hidden transition-all duration-300">
-              <p className="font-medium text-sm truncate">{user?.email}</p>
-              <p className="text-xs text-muted-foreground capitalize truncate">
-                {user?.role?.replace("_", " ")}
-              </p>
+            <div className="overflow-hidden transition-all duration-300 flex-1">
+              <p className="font-medium text-sm truncate text-foreground">{user?.email}</p>
+              <p className="text-xs text-muted-foreground capitalize truncate">{user?.role?.replace("_", " ")}</p>
             </div>
           )}
         </div>
@@ -718,7 +586,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <Button
               onClick={logout}
               variant="ghost"
-              className={`w-full transition-all duration-300 ${
+              className={`w-full transition-all duration-300 hover:bg-destructive/10 hover:text-destructive ${
                 isSidebarCollapsed ? "p-2 justify-center" : "justify-start"
               }`}
             >
@@ -726,59 +594,45 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               {!isSidebarCollapsed && <span className="ml-2">Logout</span>}
             </Button>
           </TooltipTrigger>
-          {isSidebarCollapsed && (
-            <TooltipContent side="right">
-              <p>Logout</p>
-            </TooltipContent>
-          )}
+          {isSidebarCollapsed && <TooltipContent side="right"><p>Logout</p></TooltipContent>}
         </Tooltip>
       </div>
     </div>
   );
 
-  // Mobile Options Sheet Content
   const MobileOptionsContent = () => (
     <div className="flex flex-col h-full p-6 space-y-6">
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Account Details</h3>
-
-        {/* User Info */}
-        <div className="flex items-center space-x-3 p-4 bg-muted rounded-lg">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+        <h3 className="text-lg font-semibold gradient-text">Account Details</h3>
+        <div className="flex items-center space-x-3 p-4 glass-card rounded-xl">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
             <User className="h-6 w-6 text-primary" />
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="font-medium truncate">{user?.email}</p>
-            <p className="text-sm text-muted-foreground capitalize truncate">
-              {user?.role?.replace("_", " ")}
-            </p>
+            <p className="text-sm text-muted-foreground capitalize truncate">{user?.role?.replace("_", " ")}</p>
           </div>
         </div>
-
-        {/* Company ID */}
         {completeUser?.company_id?._id && (
-          <div className="p-4 bg-muted rounded-lg">
+          <div className="p-4 glass-card rounded-xl">
             <p className="text-sm text-muted-foreground mb-1">Company ID</p>
             <p className="font-medium">{completeUser.company_id._id}</p>
           </div>
         )}
       </div>
-
-      {/* Docs */}
+      <div className="flex items-center justify-between p-4 glass-card rounded-xl">
+        <span className="font-medium">Theme</span>
+        <ThemeToggle />
+      </div>
       <Link to="/docs" onClick={() => setIsMobileOptionsOpen(false)}>
         <Button variant="outline" className="w-full justify-start" size="lg">
           <FileText className="h-5 w-5 mr-3" />
           Documentation
         </Button>
       </Link>
-
-      {/* Logout */}
-      <div className="mt-auto pt-4 border-t">
+      <div className="mt-auto pt-4 border-t border-border/30">
         <Button
-          onClick={() => {
-            logout();
-            setIsMobileOptionsOpen(false);
-          }}
+          onClick={() => { logout(); setIsMobileOptionsOpen(false); }}
           variant="destructive"
           className="w-full justify-start"
           size="lg"
@@ -790,29 +644,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     </div>
   );
 
+
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex bg-background">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
       {/* Mobile Sidebar */}
-      <Sheet
-        open={isMobileMenuOpen}
-        onOpenChange={(open) => {
-          setIsMobileMenuOpen(open);
-          handleSidebarToggle(false, true); // Always false for mobile
-        }}
-      >
-        <SheetContent side="left" className="w-64 p-0">
-          <Sidebar className="w-full" />
+      <Sheet open={isMobileMenuOpen} onOpenChange={(open) => { setIsMobileMenuOpen(open); handleSidebarToggle(false, true); }}>
+        <SheetContent side="left" className="w-64 p-0 glass-card">
+          <Sidebar className="w-full border-r-0" />
         </SheetContent>
       </Sheet>
 
       {/* Mobile Options Sheet */}
       <Sheet open={isMobileOptionsOpen} onOpenChange={setIsMobileOptionsOpen}>
-        <SheetContent side="right" className="w-80 p-0">
+        <SheetContent side="right" className="w-80 p-0 glass-card">
           <MobileOptionsContent />
         </SheetContent>
       </Sheet>
@@ -820,88 +669,60 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-card border-b px-4 md:px-6 py-4 flex items-center justify-between">
+        <header className="glass-card border-b border-border/30 px-4 md:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2 md:space-x-4 flex-1 min-w-0">
             {/* Mobile Menu Button */}
-            <Sheet
-              open={isMobileMenuOpen}
-              onOpenChange={(open) => {
-                setIsMobileMenuOpen(open);
-                handleSidebarToggle(false, true); // Always false for mobile
-              }}
-            >
+            <Sheet open={isMobileMenuOpen} onOpenChange={(open) => { setIsMobileMenuOpen(open); handleSidebarToggle(false, true); }}>
               <SheetTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon" className="shrink-0">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
             </Sheet>
-            {/* Desktop Sidebar Toggle - Only show when collapsed */}
-            {isSidebarCollapsed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden md:flex bg-green-500 text-white hover:bg-green-600"
-                onClick={() => handleSidebarToggle(false)}
-              >
-                {" "}
-                <ChevronRight className="h-5 w-5" />{" "}
-              </Button>
-            )}{" "}
-            {!isSidebarCollapsed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden md:flex bg-green-500 text-white hover:bg-green-600"
-                onClick={() => handleSidebarToggle(true)}
-              >
-                {" "}
-                <ChevronLeft className="h-5 w-5" />{" "}
-              </Button>
-            )}
+
+            {/* Desktop Sidebar Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden md:flex bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 shadow-glow"
+              onClick={() => handleSidebarToggle(!isSidebarCollapsed)}
+            >
+              {isSidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            </Button>
+
             <h1 className="text-lg md:text-2xl font-bold truncate">
               {hasNoModuleAccess ? "Access Restricted" : title}
             </h1>
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon">
+          <div className="hidden md:flex items-center space-x-3">
+            <ThemeToggle />
+            <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-pulse" />
             </Button>
-
-            <Link to="/docs">
-              <Button variant="ghost" size="sm">
-                <FileText className="h-4 w-4 mr-2" />
-                Docs
-              </Button>
-            </Link>
-
             {completeUser?.company_id?._id && (
               <Badge variant="outline" className="ml-2">
-                Company ID: {completeUser.company_id._id}
+                Company Name : {completeUser.company_id.company_name}
               </Badge>
             )}
           </div>
 
-          {/* Mobile Actions - Notification + Options */}
+          {/* Mobile Actions */}
           <div className="md:hidden flex items-center space-x-2">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-pulse" />
             </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileOptionsOpen(true)}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setIsMobileOptionsOpen(true)}>
               <MoreVertical className="h-5 w-5" />
             </Button>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-1">
+        <main className="flex-1 overflow-y-auto p-1 md:p-3">
           {hasNoModuleAccess ? <NoAccessContent /> : children}
         </main>
       </div>
@@ -909,11 +730,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Subscription Modal */}
       <SubscriptionModal
         isOpen={showSubscriptionModal}
-        onClose={
-          user?.subscription_modal_force
-            ? undefined
-            : () => setShowSubscriptionModal(false)
-        }
+        onClose={user?.subscription_modal_force ? undefined : () => setShowSubscriptionModal(false)}
         canClose={!user?.subscription_modal_force}
         mode="new"
         onSuccess={() => setShowSubscriptionModal(false)}

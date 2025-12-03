@@ -46,7 +46,6 @@ import {
   ChevronRight,
   BarChart3,
   MoreVertical,
-  Plus,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -84,6 +83,7 @@ interface DataTableLayoutProps {
   disableDashboardLayout?: boolean;
 }
 
+
 const setCookie = (name: string, value: string, days: number = 30) => {
   try {
     const expires = new Date();
@@ -115,7 +115,6 @@ const getCookie = (name: string): string | null => {
 
 const DataTableLayout: React.FC<DataTableLayoutProps> = ({
   title,
-  data,
   isLoading,
   totalCount,
   statChips,
@@ -126,10 +125,6 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
   onPageChange,
   onRowsPerPageChange,
   onPaginationToggle,
-  sortField,
-  sortOrder,
-  onSort,
-  getSortIcon,
   renderTableHeader,
   renderTableBody,
   onRefresh,
@@ -166,10 +161,10 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
       ? Math.ceil(totalCount / rowsPerPage)
       : 1;
 
+
   const getPaginationItems = () => {
     if (totalPages <= 1) return null;
     const items = [];
-    const maxVisiblePages = 5;
 
     if (totalPages > 0) {
       items.push(
@@ -177,9 +172,7 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
           <PaginationLink
             onClick={() => onPageChange(1)}
             isActive={page === 1}
-            className={`cursor-pointer ${
-              page === 1 ? "bg-blue-600 text-white hover:bg-blue-700" : ""
-            }`}
+            className="cursor-pointer"
           >
             1
           </PaginationLink>
@@ -205,9 +198,7 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
             <PaginationLink
               onClick={() => onPageChange(i)}
               isActive={page === i}
-              className={`cursor-pointer ${
-                page === i ? "bg-blue-600 text-white hover:bg-blue-700" : ""
-              }`}
+              className="cursor-pointer"
             >
               {i}
             </PaginationLink>
@@ -230,11 +221,7 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
           <PaginationLink
             onClick={() => onPageChange(totalPages)}
             isActive={page === totalPages}
-            className={`cursor-pointer ${
-              page === totalPages
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : ""
-            }`}
+            className="cursor-pointer"
           >
             {totalPages}
           </PaginationLink>
@@ -257,16 +244,16 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
     return options;
   };
 
-  // Separate primary and secondary action buttons
   const primaryButton = actionButtons.length > 0 ? actionButtons[0] : null;
   const secondaryButtons = actionButtons.slice(1);
 
+
   const content = (
     <div className="flex flex-col h-full">
-      {/* Fixed Header - Responsive */}
-      <div className="bg-white border-b border-gray-200 p-3 sm:p-4 flex-shrink-0">
+      {/* Fixed Header - Glass Effect */}
+      <div className="glass-card border-b border-border/30 p-3 sm:p-4 flex-shrink-0 rounded-t-xl">
         <div className="flex items-center justify-between gap-2">
-          {/* Left side - Stats (Desktop) / Stats Dialog (Mobile) */}
+          {/* Left side - Stats */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {/* Mobile: Stats Dialog */}
             <div className="sm:hidden">
@@ -275,35 +262,31 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-2 bg-gray-50 hover:bg-gray-100"
+                    className="h-8 px-3 gap-1.5"
                   >
-                    <BarChart3 className="h-4 w-4 mr-1" />
-                    <span className="text-xs">Stats</span>
+                    <BarChart3 className="h-4 w-4" />
+                    <span className="text-xs font-medium">Stats</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Statistics</DialogTitle>
+                    <DialogTitle className="gradient-text">Statistics</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-3 py-4">
                     {statChips.map((chip, index) => (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-3 rounded-lg bg-gray-50 border ${
-                          chip.onClick ? "cursor-pointer hover:bg-gray-100" : ""
+                        className={`flex items-center justify-between p-4 rounded-xl glass-card transition-all duration-200 ${
+                          chip.onClick ? "cursor-pointer hover:shadow-md hover:scale-[1.02]" : ""
                         }`}
                         onClick={chip.onClick}
                       >
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-foreground">
                           {chip.label}
                         </span>
                         <Badge
                           variant={chip.variant || "outline"}
-                          className={`
-          ${chip.bgColor || "bg-gray-100"} 
-          ${chip.textColor || ""} 
-          ${chip.hoverColor || ""}
-        `}
+                          className={chip.bgColor || ""}
                         >
                           {chip.value}
                         </Badge>
@@ -321,13 +304,12 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
                   key={index}
                   variant={chip.variant || "outline"}
                   className={`
-        px-3 py-1 text-sm
-        ${chip.bgColor || "bg-gray-100"} 
-        ${chip.textColor || ""} 
-        ${chip.hoverColor || "hover:bg-gray-100"}
-        whitespace-nowrap
-        ${chip.onClick ? "cursor-pointer" : ""}
-      `}
+                    px-3 py-1.5 text-sm transition-all duration-200
+                    ${chip.bgColor || ""} 
+                    ${chip.textColor || ""} 
+                    whitespace-nowrap
+                    ${chip.onClick ? "cursor-pointer hover:shadow-md hover:scale-105" : ""}
+                  `}
                   onClick={chip.onClick}
                 >
                   {chip.label}: {chip.value}
@@ -337,17 +319,17 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
           </div>
 
           {/* Right side - Action buttons */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {/* Refresh Button */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={onRefresh}
                     disabled={isLoading}
-                    className="h-8 w-8 sm:h-9 sm:w-9 p-0 bg-gray-50 hover:bg-gray-100"
+                    className="h-9 w-9"
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
@@ -360,25 +342,21 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
               </Tooltip>
             </TooltipProvider>
 
-            {/* Primary Action Button (Always visible) */}
+            {/* Primary Action Button */}
             {primaryButton && (
               <>
                 {primaryButton.className === '' ? (
-                  // Render custom component directly (like search bar)
                   <div>{primaryButton.icon}</div>
                 ) : (
-                  // Render as button with tooltip
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant={primaryButton.variant || "outline"}
-                          size="sm"
+                          size="icon"
                           onClick={primaryButton.onClick}
                           disabled={primaryButton.disabled}
-                          className={`h-8 w-8 sm:h-9 sm:w-9 p-0 ${
-                            primaryButton.className || ""
-                          }`}
+                          className={`h-9 w-9 ${primaryButton.className || ""}`}
                         >
                           {primaryButton.icon}
                         </Button>
@@ -392,24 +370,18 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
               </>
             )}
 
-            {/* Mobile: More Actions Popover (for secondary buttons) */}
+
+            {/* Mobile: More Actions Popover */}
             {secondaryButtons.length > 0 && (
               <>
                 <div className="sm:hidden">
-                  <Popover
-                    open={moreActionsOpen}
-                    onOpenChange={setMoreActionsOpen}
-                  >
+                  <Popover open={moreActionsOpen} onOpenChange={setMoreActionsOpen}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 bg-gray-50 hover:bg-gray-100"
-                      >
+                      <Button variant="outline" size="icon" className="h-9 w-9">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2" align="end">
+                    <PopoverContent className="w-52 p-2" align="end">
                       <div className="flex flex-col gap-1">
                         {secondaryButtons.map((button, index) => (
                           <Button
@@ -421,9 +393,9 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
                               setMoreActionsOpen(false);
                             }}
                             disabled={button.disabled}
-                            className="w-full justify-start h-9"
+                            className="w-full justify-start h-10 gap-3"
                           >
-                            <span className="mr-2">{button.icon}</span>
+                            <span>{button.icon}</span>
                             <span className="text-sm">{button.tooltip}</span>
                           </Button>
                         ))}
@@ -437,19 +409,17 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
                   {secondaryButtons.map((button, index) => (
                     <React.Fragment key={index}>
                       {button.className === '' ? (
-                        // Render custom component directly
                         <div>{button.icon}</div>
                       ) : (
-                        // Render as button with tooltip
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant={button.variant || "outline"}
-                                size="sm"
+                                size="icon"
                                 onClick={button.onClick}
                                 disabled={button.disabled}
-                                className={`h-9 w-9 p-0 ${button.className || ""}`}
+                                className={`h-9 w-9 ${button.className || ""}`}
                               >
                                 {button.icon}
                               </Button>
@@ -471,16 +441,19 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
 
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-hidden">
-        <Card className="h-full flex flex-col border-0 shadow-none">
+        <Card variant="glass" className="h-full flex flex-col border-0 shadow-none rounded-none">
           <CardContent className="flex-1 overflow-hidden p-0">
             {isLoading ? (
               <div className="flex justify-center items-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent"></div>
+                  <div className="absolute inset-0 animate-ping rounded-full h-10 w-10 border border-primary/30"></div>
+                </div>
               </div>
             ) : (
-              <div className="h-full overflow-auto">
+              <div className="h-full overflow-auto custom-scrollbar">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10 border-b shadow-sm">
+                  <TableHeader className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 border-b border-border/50">
                     {renderTableHeader()}
                   </TableHeader>
                   <TableBody>{renderTableBody()}</TableBody>
@@ -491,18 +464,16 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
         </Card>
       </div>
 
-      {/* Fixed Footer with Pagination - Responsive */}
-      <div className="bg-white border-t border-gray-200 py-2 px-3 sm:px-4 flex-shrink-0">
-        {/* Mobile Layout (Below 640px) */}
+
+      {/* Fixed Footer with Pagination */}
+      <div className="glass-card border-t border-border/30 py-3 px-3 sm:px-4 flex-shrink-0 rounded-b-xl">
+        {/* Mobile Layout */}
         <div className="flex sm:hidden items-center justify-between gap-2">
-          {/* Left: Pagination Checkbox */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <Checkbox
               id="pagination-mobile"
               checked={paginationEnabled}
-              onCheckedChange={(checked) =>
-                handlePaginationToggle(checked as boolean)
-              }
+              onCheckedChange={(checked) => handlePaginationToggle(checked as boolean)}
               className="h-4 w-4"
             />
             <Label
@@ -513,17 +484,16 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
             </Label>
           </div>
 
-          {/* Center: Prev/Next Buttons */}
           {paginationEnabled && totalPages > 0 && (
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => page > 1 && onPageChange(page - 1)}
                 disabled={page <= 1}
-                className="h-7 px-2"
+                className="h-8 px-2 gap-1"
               >
-                <ChevronLeft className="h-3 w-3 mr-1" />
+                <ChevronLeft className="h-3 w-3" />
                 <span className="text-xs">Prev</span>
               </Button>
               <Button
@@ -531,25 +501,19 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
                 size="sm"
                 onClick={() => page < totalPages && onPageChange(page + 1)}
                 disabled={page >= totalPages}
-                className="h-7 px-2"
+                className="h-8 px-2 gap-1"
               >
                 <span className="text-xs">Next</span>
-                <ChevronRight className="h-3 w-3 ml-1" />
+                <ChevronRight className="h-3 w-3" />
               </Button>
             </div>
           )}
 
-          {/* Right: Go to Page */}
           {paginationEnabled && totalPages > 0 && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Label className="text-xs text-muted-foreground whitespace-nowrap">
-                Go:
-              </Label>
-              <Select
-                value={page.toString()}
-                onValueChange={(value) => onPageChange(parseInt(value))}
-              >
-                <SelectTrigger className="h-7 w-12 text-xs">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Go:</Label>
+              <Select value={page.toString()} onValueChange={(value) => onPageChange(parseInt(value))}>
+                <SelectTrigger className="h-8 w-14 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>{getPageOptions()}</SelectContent>
@@ -558,17 +522,14 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
           )}
         </div>
 
-        {/* Desktop Layout (640px and above) */}
+        {/* Desktop Layout */}
         <div className="hidden sm:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-          {/* Left side - Pagination controls */}
           <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="pagination"
                 checked={paginationEnabled}
-                onCheckedChange={(checked) =>
-                  handlePaginationToggle(checked as boolean)
-                }
+                onCheckedChange={(checked) => handlePaginationToggle(checked as boolean)}
                 className="h-4 w-4"
               />
               <Label
@@ -581,34 +542,22 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
 
             {paginationEnabled && (
               <div className="flex items-center gap-2 sm:ml-4">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">
-                  Rows:
-                </Label>
-                <Select
-                  value={rowsPerPage.toString()}
-                  onValueChange={onRowsPerPageChange}
-                >
-                  <SelectTrigger className="h-7 w-20 text-xs">
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Rows:</Label>
+                <Select value={rowsPerPage.toString()} onValueChange={onRowsPerPageChange}>
+                  <SelectTrigger className="h-8 w-20 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="10" className="text-xs">
-                      10
-                    </SelectItem>
-                    <SelectItem value="20" className="text-xs">
-                      20
-                    </SelectItem>
-                    <SelectItem value="50" className="text-xs">
-                      50
-                    </SelectItem>
-                    <SelectItem value="100" className="text-xs">
-                      100
-                    </SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             )}
           </div>
+
 
           {/* Center - Pagination navigation */}
           {paginationEnabled && totalPages > 0 && (
@@ -618,21 +567,13 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
                   <PaginationItem>
                     <PaginationPrevious
                       onClick={() => page > 1 && onPageChange(page - 1)}
-                      className={
-                        page <= 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
+                      className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
 
-                  {/* Always show page 1 when there's only one page */}
                   {totalPages === 1 ? (
                     <PaginationItem>
-                      <PaginationLink
-                        isActive={true}
-                        className="cursor-pointer bg-blue-600 text-white hover:bg-blue-700"
-                      >
+                      <PaginationLink isActive={true} className="cursor-pointer">
                         1
                       </PaginationLink>
                     </PaginationItem>
@@ -642,14 +583,8 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
 
                   <PaginationItem>
                     <PaginationNext
-                      onClick={() =>
-                        page < totalPages && onPageChange(page + 1)
-                      }
-                      className={
-                        page >= totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
+                      onClick={() => page < totalPages && onPageChange(page + 1)}
+                      className={page >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -662,22 +597,20 @@ const DataTableLayout: React.FC<DataTableLayoutProps> = ({
             {paginationEnabled && totalPages > 0 && (
               <>
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm text-muted-foreground whitespace-nowrap">
-                    Go to:
-                  </Label>
-                  <Select
-                    value={page.toString()}
-                    onValueChange={(value) => onPageChange(parseInt(value))}
-                  >
-                    <SelectTrigger className="h-7 w-16 text-xs">
+                  <Label className="text-sm text-muted-foreground whitespace-nowrap">Go to:</Label>
+                  <Select value={page.toString()} onValueChange={(value) => onPageChange(parseInt(value))}>
+                    <SelectTrigger className="h-8 w-16 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>{getPageOptions()}</SelectContent>
                   </Select>
                 </div>
 
-                <div className="hidden lg:flex text-sm text-muted-foreground whitespace-nowrap">
-                  Total: {totalCount}
+                <div className="hidden lg:flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground">Total:</span>
+                  <Badge variant="outline" className="font-medium">
+                    {totalCount}
+                  </Badge>
                 </div>
               </>
             )}
