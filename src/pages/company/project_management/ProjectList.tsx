@@ -1,12 +1,9 @@
 import { useState, useCallback } from "react";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -15,72 +12,87 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { projectServices } from "@/api/services";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { ViewToggle, ViewMode } from "@/components/project-management/ViewToggle";
-import { StatusBadge } from "@/components/project-management/StatusBadge";
+import type { ViewMode } from "@/components/project-management/ViewToggle";
 import ProjectDialog from "@/components/project-management/ProjectDialog";
+import ProjectFilterSheet, { ProjectFilters } from "@/components/project-management/ProjectFilterSheet";
+import ProjectListView from "@/components/project-management/ProjectListView";
+import ProjectKanbanView from "@/components/project-management/ProjectKanbanView";
+import ProjectGroupsTab from "@/components/project-management/ProjectGroupsTab";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
+import { PROJECT_TABS, ProjectTab } from "@/constants/projectConstants";
 import {
   Plus,
-  Search,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Eye,
-  Users,
-  Bug,
-  ListCheck,
-  Calendar,
+  Filter,
   FolderKanban,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 
 const ProjectList = () => {
+  const [activeTab, setActiveTab] = useState<ProjectTab>("active");
   const [view, setView] = useState<ViewMode>("list");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [filters, setFilters] = useState<ProjectFilters>({ filter_mode: 'all' });
+  
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [paginationEnabled, setPaginationEnabled] = useState(true);
+  const [goToPage, setGoToPage] = useState("");
+  
+  // Sort state
+  const [sortField, setSortField] = useState("-created_at");
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    refetch,
-  } = useInfiniteQuery({
-    queryKey: ["projects", search, statusFilter],
-    queryFn: async ({ pageParam = 1 }) => {
-      const params: any = { page: pageParam, limit: 20 };
-      if (search) params.search = search;
-      if (statusFilter && statusFilter !== "all") params.status = statusFilter;
-      const response = await projectServices.getProjects(params);
+  // Build query params
+  const buildQueryParams = useCallback(() => {
+    const params: any = {
+      page: paginationEnabled ? page : 1,
+      limit: paginationEnabled ? rowsPerPage : 1000,
+      sort: sortField,
+    };
+
+    // Add filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (value instanceof Date) {
+          params[key] = value.toISOString();
+        } else {
+          params[key] = value;
+        }
+      }
+    });
+
+    return params;
+  }, [page, rowsPerPage, paginationEnabled, sortField, filters]);
+
+  // Fetch projects based on active tab
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["projects", activeTab, buildQueryParams()],
+    queryFn: async () => {
+      if (activeTab === "groups") {
+        return null; // Groups tab has its own data fetching
+      }
+      const params = buildQueryParams();
+      const response = await projectServices.getProjectsByTab(activeTab, params);
       return response.data;
     },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.has_more) {
-        return lastPage.pagination.current_page + 1;
-      }
-      return undefined;
-    },
-    initialPageParam: 1,
+    enabled: activeTab !== "groups",
   });
 
   const deleteMutation = useMutation({
@@ -94,13 +106,8 @@ const ProjectList = () => {
     },
   });
 
-  const { loadMoreRef } = useInfiniteScroll({
-    hasMore: !!hasNextPage,
-    isLoading: isFetchingNextPage,
-    onLoadMore: fetchNextPage,
-  });
-
-  const projects = data?.pages.flatMap((page) => page.data) || [];
+  const projects = data?.data || [];
+  const pagination = data?.pagination || { total_count: 0, total_pages: 1, current_page: 1 };
 
   const handleEdit = (project: any) => {
     setSelectedProject(project);
@@ -118,83 +125,235 @@ const ProjectList = () => {
     setSelectedProject(null);
   };
 
+  const handleApplyFilters = (newFilters: ProjectFilters) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortField(`-${field}`);
+    } else if (sortField === `-${field}`) {
+      setSortField(field);
+    } else {
+      setSortField(field);
+    }
+  };
+
+  const handleGoToPage = () => {
+    const pageNum = parseInt(goToPage);
+    if (pageNum >= 1 && pageNum <= pagination.total_pages) {
+      setPage(pageNum);
+      setGoToPage("");
+    }
+  };
+
+  const hasActiveFilters = Object.entries(filters).some(
+    ([key, value]) => key !== 'filter_mode' && value !== undefined && value !== null && value !== ''
+  );
+
   return (
     <DashboardLayout title="Projects">
-      <div className="space-y-4">
-        {/* Header Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="flex flex-1 gap-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search projects..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="On Hold">On Hold</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="Archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex gap-2">
-            <ViewToggle view={view} onViewChange={setView} showCard />
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border-b bg-background">
+          {/* Left - Tabs */}
+          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as ProjectTab); setPage(1); }}>
+            <TabsList className="h-9">
+              {PROJECT_TABS.map((tab) => (
+                <TabsTrigger key={tab.id} value={tab.id} className="text-xs sm:text-sm">
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          {/* Right - Actions */}
+          <div className="flex items-center gap-2">
+            {activeTab !== "groups" && (
+              <>
+                {/* View Toggle */}
+                <div className="flex items-center border rounded-md">
+                  <Button
+                    variant={view === "list" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-8 px-3 rounded-r-none"
+                    onClick={() => setView("list")}
+                  >
+                    <List className="h-4 w-4 mr-1" />
+                    List
+                  </Button>
+                  <Button
+                    variant={view === "kanban" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-8 px-3 rounded-l-none"
+                    onClick={() => setView("kanban")}
+                  >
+                    <LayoutGrid className="h-4 w-4 mr-1" />
+                    Kanban
+                  </Button>
+                </div>
+
+                {/* Filter Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilterOpen(true)}
+                  className="h-8 relative"
+                >
+                  <Filter className="h-4 w-4 mr-1" />
+                  Filter
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full" />
+                  )}
+                </Button>
+              </>
+            )}
+
+            {/* New Project Button */}
+            <Button size="sm" className="h-8" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />
               New Project
             </Button>
           </div>
         </div>
 
         {/* Content */}
-        {isLoading ? (
-          <LoadingSkeleton view={view} />
-        ) : view === "list" ? (
-          <ProjectTable
-            projects={projects}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ) : (
-          <ProjectCards
-            projects={projects}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        )}
-
-        {/* Load More Trigger */}
-        <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-          {isFetchingNextPage && (
-            <div className="text-sm text-muted-foreground">Loading more...</div>
+        <div className="flex-1 overflow-hidden">
+          {activeTab === "groups" ? (
+            <ProjectGroupsTab />
+          ) : view === "kanban" ? (
+            <ProjectKanbanView onProjectClick={handleEdit} />
+          ) : (
+            <ProjectListView
+              projects={projects}
+              isLoading={isLoading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              sortField={sortField.replace('-', '')}
+              sortOrder={sortField.startsWith('-') ? 'desc' : 'asc'}
+              onSort={handleSort}
+            />
           )}
         </div>
 
-        {/* Empty State */}
-        {!isLoading && projects.length === 0 && (
-          <div className="text-center py-12">
-            <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No projects found</h3>
-            <p className="text-muted-foreground mb-4">
-              Get started by creating your first project
-            </p>
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Project
-            </Button>
+        {/* Footer - Pagination */}
+        {activeTab !== "groups" && view === "list" && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t bg-background">
+            {/* Left - Pagination Toggle & Rows */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="pagination"
+                  checked={paginationEnabled}
+                  onCheckedChange={(checked) => {
+                    setPaginationEnabled(checked as boolean);
+                    setPage(1);
+                  }}
+                />
+                <Label htmlFor="pagination" className="text-sm cursor-pointer">
+                  Pagination
+                </Label>
+              </div>
+
+              {paginationEnabled && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground">Rows:</Label>
+                  <Select
+                    value={rowsPerPage.toString()}
+                    onValueChange={(v) => {
+                      setRowsPerPage(parseInt(v));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {/* Center - Pagination */}
+            {paginationEnabled && pagination.total_pages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => page > 1 && setPage(page - 1)}
+                      className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {[...Array(Math.min(5, pagination.total_pages))].map((_, i) => {
+                    let pageNum;
+                    if (pagination.total_pages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= pagination.total_pages - 2) {
+                      pageNum = pagination.total_pages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => setPage(pageNum)}
+                          isActive={page === pageNum}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => page < pagination.total_pages && setPage(page + 1)}
+                      className={page >= pagination.total_pages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
+            {/* Right - Go to & Total */}
+            <div className="flex items-center gap-4">
+              {paginationEnabled && pagination.total_pages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground">Go to:</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={pagination.total_pages}
+                    value={goToPage}
+                    onChange={(e) => setGoToPage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleGoToPage()}
+                    className="h-8 w-16"
+                    placeholder={page.toString()}
+                  />
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Total Count:</span>
+                <Badge variant="outline">{pagination.total_count}</Badge>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
+      {/* Dialogs */}
       <ProjectDialog
         open={dialogOpen}
         onClose={handleDialogClose}
@@ -204,185 +363,14 @@ const ProjectList = () => {
           refetch();
         }}
       />
+
+      <ProjectFilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+      />
     </DashboardLayout>
-  );
-};
-
-// Project Table Component
-const ProjectTable = ({ projects, onEdit, onDelete }: any) => (
-  <div className="border rounded-lg">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Project</TableHead>
-          <TableHead>Owner</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Progress</TableHead>
-          <TableHead>Tasks</TableHead>
-          <TableHead>Bugs</TableHead>
-          <TableHead>Dates</TableHead>
-          <TableHead className="w-[50px]"></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {projects.map((project: any) => (
-          <TableRow key={project._id}>
-            <TableCell>
-              <div>
-                <p className="font-medium">{project.title}</p>
-                <p className="text-xs text-muted-foreground">{project.project_id}</p>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                  {project.owner?.first_name?.charAt(0)}
-                </div>
-                <span className="text-sm">
-                  {project.owner?.first_name} {project.owner?.last_name}
-                </span>
-              </div>
-            </TableCell>
-            <TableCell>
-              <StatusBadge status={project.status} type="project" />
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Progress value={project.progress} className="w-20 h-2" />
-                <span className="text-xs text-muted-foreground">{project.progress}%</span>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-1 text-sm">
-                <ListCheck className="h-4 w-4 text-muted-foreground" />
-                {project.completed_task_count || 0}/{project.task_count || 0}
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-1 text-sm">
-                <Bug className="h-4 w-4 text-muted-foreground" />
-                {project.closed_bug_count || 0}/{project.bug_count || 0}
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="text-xs text-muted-foreground">
-                {project.start_date && format(new Date(project.start_date), "MMM d, yyyy")}
-                {project.end_date && ` - ${format(new Date(project.end_date), "MMM d, yyyy")}`}
-              </div>
-            </TableCell>
-            <TableCell>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(project)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onDelete(project._id)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </div>
-);
-
-// Project Cards Component
-const ProjectCards = ({ projects, onEdit, onDelete }: any) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {projects.map((project: any) => (
-      <Card key={project._id} className="hover:shadow-md transition-shadow">
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-medium">{project.title}</p>
-              <p className="text-xs text-muted-foreground">{project.project_id}</p>
-            </div>
-            <StatusBadge status={project.status} type="project" />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Progress</span>
-              <span>{project.progress}%</span>
-            </div>
-            <Progress value={project.progress} className="h-2" />
-          </div>
-          
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <ListCheck className="h-4 w-4" />
-              {project.task_count || 0} tasks
-            </div>
-            <div className="flex items-center gap-1">
-              <Bug className="h-4 w-4" />
-              {project.bug_count || 0} bugs
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between pt-2 border-t">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                {project.owner?.first_name?.charAt(0)}
-              </div>
-              <span className="text-sm">{project.owner?.first_name}</span>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(project)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => onDelete(project._id)}
-                  className="text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </CardContent>
-      </Card>
-    ))}
-  </div>
-);
-
-// Loading Skeleton
-const LoadingSkeleton = ({ view }: { view: ViewMode }) => {
-  if (view === "list") {
-    return (
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
-    );
-  }
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[...Array(6)].map((_, i) => (
-        <Skeleton key={i} className="h-48 w-full" />
-      ))}
-    </div>
   );
 };
 

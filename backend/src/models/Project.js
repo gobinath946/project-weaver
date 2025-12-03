@@ -1,5 +1,23 @@
 const mongoose = require('mongoose');
 
+// Project Status Enum
+const PROJECT_STATUS = [
+  'Active',
+  'In Progress',
+  'On Track',
+  'Delayed',
+  'In Testing',
+  'On Hold',
+  'Approved',
+  'Cancelled',
+  'Planning',
+  'Completed',
+  'Invoiced',
+  'Yet to Start',
+  'Compl Yet to Mov',
+  'Waiting for Live Input'
+];
+
 const ProjectSchema = new mongoose.Schema({
   project_id: {
     type: String,
@@ -15,7 +33,7 @@ const ProjectSchema = new mongoose.Schema({
   description: {
     type: String,
     trim: true,
-    maxlength: [2000, 'Description cannot exceed 2000 characters']
+    maxlength: [5000, 'Description cannot exceed 5000 characters']
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -26,6 +44,19 @@ const ProjectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  allocated_users: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  allocated_time: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  no_of_allocated_users: {
+    type: Number,
+    default: 0
+  },
   company_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company',
@@ -33,13 +64,21 @@ const ProjectSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Active', 'On Hold', 'Completed', 'Archived'],
+    enum: PROJECT_STATUS,
     default: 'Active'
   },
   visibility: {
     type: String,
     enum: ['Private', 'Public'],
     default: 'Private'
+  },
+  strict_project: {
+    type: Boolean,
+    default: false
+  },
+  project_group: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProjectGroup'
   },
   start_date: {
     type: Date
@@ -77,6 +116,10 @@ const ProjectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  last_modified_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   created_at: {
     type: Date,
     default: Date.now
@@ -94,10 +137,18 @@ ProjectSchema.index({ status: 1 });
 ProjectSchema.index({ team_members: 1 });
 ProjectSchema.index({ project_id: 1 });
 ProjectSchema.index({ created_at: -1 });
+ProjectSchema.index({ visibility: 1 });
+ProjectSchema.index({ project_group: 1 });
+ProjectSchema.index({ strict_project: 1 });
+ProjectSchema.index({ allocated_users: 1 });
 
 // Update timestamp on save
 ProjectSchema.pre('save', function(next) {
   this.updated_at = new Date();
+  // Auto-calculate no_of_allocated_users
+  if (this.allocated_users) {
+    this.no_of_allocated_users = this.allocated_users.length;
+  }
   next();
 });
 
@@ -106,7 +157,7 @@ ProjectSchema.pre('save', async function(next) {
   if (!this.project_id) {
     try {
       const count = await mongoose.model('Project').countDocuments({ company_id: this.company_id });
-      this.project_id = `PRJ-${String(count + 1).padStart(3, '0')}`;
+      this.project_id = `PR-${String(count + 1).padStart(3, '0')}`;
     } catch (error) {
       next(error);
     }
@@ -142,5 +193,8 @@ ProjectSchema.methods.updateBugCounts = async function() {
   this.closed_bug_count = closedBugs;
   await this.save();
 };
+
+// Export status enum for use in other files
+ProjectSchema.statics.PROJECT_STATUS = PROJECT_STATUS;
 
 module.exports = mongoose.model('Project', ProjectSchema);

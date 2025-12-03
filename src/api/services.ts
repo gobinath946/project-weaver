@@ -321,13 +321,23 @@ export const dropdownServices = {
 export const projectServices = {
   // Projects
   getProjects: (params?: any) => apiClient.get("/api/projects", { params }),
+  getProjectsByTab: (tab: string, params?: any) => apiClient.get(`/api/projects/by-tab/${tab}`, { params }),
+  getProjectsKanban: () => apiClient.get("/api/projects/kanban"),
   getProject: (id: string) => apiClient.get(`/api/projects/${id}`),
   createProject: (data: any) => apiClient.post("/api/projects", data),
   updateProject: (id: string, data: any) => apiClient.put(`/api/projects/${id}`, data),
   deleteProject: (id: string) => apiClient.delete(`/api/projects/${id}`),
   getProjectStats: (id: string) => apiClient.get(`/api/projects/${id}/stats`),
   getProjectUsers: () => apiClient.get("/api/projects/users"),
+  getProjectStatuses: () => apiClient.get("/api/projects/statuses"),
   getProjectDashboard: (id: string) => apiClient.get(`/api/project-dashboard/projects/${id}/dashboard`),
+
+  // Project Groups
+  getProjectGroups: (params?: any) => apiClient.get("/api/projects/groups", { params }),
+  getProjectGroup: (id: string) => apiClient.get(`/api/projects/groups/${id}`),
+  createProjectGroup: (data: any) => apiClient.post("/api/projects/groups", data),
+  updateProjectGroup: (id: string, data: any) => apiClient.put(`/api/projects/groups/${id}`, data),
+  deleteProjectGroup: (id: string) => apiClient.delete(`/api/projects/groups/${id}`),
 
   // Task Lists
   getTaskLists: (projectId: string) => apiClient.get(`/api/projects/${projectId}/task-lists`),
