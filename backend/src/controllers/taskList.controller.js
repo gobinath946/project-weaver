@@ -1,6 +1,7 @@
 const TaskList = require('../models/TaskList');
 const Project = require('../models/Project');
 const Task = require('../models/Task');
+const Milestone = require('../models/Milestone'); // Required for populate
 
 // @desc    Get task lists by project
 // @route   GET /api/projects/:projectId/task-lists
