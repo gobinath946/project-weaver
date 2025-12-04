@@ -156,7 +156,7 @@ const ProjectList = () => {
     <DashboardLayout title="Projects">
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border-b bg-background">
+        <div className="glass-card border-b border-border/30 p-3 sm:p-4 flex-shrink-0 rounded-t-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* Left - Tabs */}
           <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as ProjectTab); setPage(1); }}>
             <TabsList className="h-9">
@@ -221,7 +221,7 @@ const ProjectList = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden bg-card/50 backdrop-blur-sm">
           {activeTab === "groups" ? (
             <ProjectGroupsTab />
           ) : view === "kanban" ? (
@@ -241,7 +241,7 @@ const ProjectList = () => {
 
         {/* Footer - Pagination */}
         {activeTab !== "groups" && view === "list" && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t bg-background">
+          <div className="glass-card border-t border-border/30 py-3 px-3 sm:px-4 flex-shrink-0 rounded-b-xl flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Left - Pagination Toggle & Rows */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">

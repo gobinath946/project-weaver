@@ -69,8 +69,9 @@ const TimeLogList = () => {
 
   return (
     <DashboardLayout title="Time Logs">
-      <div className="space-y-4">
+      <div className="h-full flex flex-col">
         {/* Summary Cards */}
+        <div className="glass-card border-b border-border/30 p-3 sm:p-4 flex-shrink-0 rounded-t-xl space-y-4">
         {aggregates && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card><CardContent className="p-4 flex items-center gap-3">
@@ -110,8 +111,10 @@ const TimeLogList = () => {
           </div>
           <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Add Time Log</Button>
         </div>
+        </div>
 
         {/* Table */}
+        <div className="flex-1 overflow-hidden bg-card/50 backdrop-blur-sm rounded-b-xl p-4">
         {isLoading ? <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div> : (
           <div className="border rounded-lg">
             <Table>
@@ -172,6 +175,7 @@ const TimeLogList = () => {
             <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Add Time Log</Button>
           </div>
         )}
+        </div>
       </div>
       <TimeLogDialog open={dialogOpen} onClose={() => { setDialogOpen(false); setSelectedLog(null); }} timeLog={selectedLog} onSuccess={() => { setDialogOpen(false); setSelectedLog(null); refetch(); }} />
     </DashboardLayout>

@@ -77,8 +77,8 @@ const BugList = () => {
 
   return (
     <DashboardLayout title="Bugs">
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+      <div className="h-full flex flex-col">
+        <div className="glass-card border-b border-border/30 p-3 sm:p-4 flex-shrink-0 rounded-t-xl flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex flex-1 gap-2 flex-wrap">
             <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -108,6 +108,7 @@ const BugList = () => {
           </div>
         </div>
 
+        <div className="flex-1 overflow-hidden bg-card/50 backdrop-blur-sm rounded-b-xl p-4">
         {view === "list" ? (
           isLoading ? <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div> : (
             <div className="border rounded-lg">
@@ -162,6 +163,7 @@ const BugList = () => {
             <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Report Bug</Button>
           </div>
         )}
+        </div>
       </div>
       <BugDialog open={dialogOpen} onClose={() => { setDialogOpen(false); setSelectedBug(null); }} bug={selectedBug} onSuccess={() => { setDialogOpen(false); setSelectedBug(null); refetch(); queryClient.invalidateQueries({ queryKey: ["bugs-kanban"] }); }} />
     </DashboardLayout>

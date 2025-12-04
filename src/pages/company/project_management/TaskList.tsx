@@ -153,7 +153,7 @@ const TaskList = () => {
     <DashboardLayout title="Tasks">
       <div className="h-full flex flex-col">
         {/* Header Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between p-4 border-b">
+        <div className="glass-card border-b border-border/30 p-3 sm:p-4 flex-shrink-0 rounded-t-xl flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex items-center gap-2">
             {/* Group By Dropdown */}
             <DropdownMenu>
@@ -218,7 +218,7 @@ const TaskList = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden bg-card/50 backdrop-blur-sm rounded-b-xl">
           {view === "list" ? (
             tasksLoading ? (
               <div className="space-y-2 p-4">
