@@ -24,7 +24,7 @@ import { TASK_STATUS, TASK_STATUS_COLORS, TASK_PRIORITY, BILLING_TYPE } from "@/
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { 
-  X, ChevronUp, ChevronDown, Maximize2, Minimize2, 
+  ChevronDown, Maximize2, Minimize2, 
   MessageSquare, ListTodo, Clock, FileText, GitBranch, 
   Bug, Activity, Plus, Edit2, Check
 } from "lucide-react";
@@ -123,7 +123,7 @@ const TaskDetailModal = ({ open, onClose, taskId, projectId }: TaskDetailModalPr
       <DialogContent 
         className={cn(
           "p-0 gap-0 flex flex-col",
-          isExpanded ? "max-w-[98vw] max-h-[98vh] w-[98vw] h-[98vh]" : "max-w-[95vw] max-h-[95vh] w-[95vw] h-[95vh]"
+          isExpanded ? "max-w-[98vw] max-h-[98vh] w-[98vw] h-[98vh]" : "max-w-[90vw] max-h-[90vh] w-[90vw] h-[90vh]"
         )}
       >
         {/* Header */}
@@ -132,12 +132,9 @@ const TaskDetailModal = ({ open, onClose, taskId, projectId }: TaskDetailModalPr
             <Badge variant="outline" className="font-mono">{task?.task_id}</Badge>
             <DialogTitle className="text-base font-medium">{task?.name}</DialogTitle>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mr-8">
             <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
