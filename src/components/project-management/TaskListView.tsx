@@ -269,22 +269,35 @@ const TaskListView = ({
     );
   }
 
-  // Render group header row
+  // Render group header row - using separate cells for proper sticky behavior
   const renderGroupHeader = (groupName: string, taskCount: number, isExpanded: boolean) => (
     <TableRow 
       className="bg-muted/50 hover:bg-muted cursor-pointer"
       onClick={() => toggleGroup(groupName)}
     >
+      {/* First sticky cell with group name */}
       <TableCell 
-        colSpan={columns.length + 1}
-        className="py-2 sticky left-0 bg-muted/50 hover:bg-muted"
+        className="py-2 sticky left-0 z-30 bg-muted/50 w-[100px] min-w-[100px]"
       >
         <div className="flex items-center gap-2">
           {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          <span className="font-medium">{groupName}</span>
+          <span className="font-medium truncate">{groupName}</span>
           <Badge variant="secondary" className="text-xs">{taskCount}</Badge>
         </div>
       </TableCell>
+      {/* Second sticky cell - empty but maintains structure */}
+      <TableCell 
+        className="py-2 sticky left-[280px] z-30 bg-muted/50 w-[220px] min-w-[220px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+      />
+      {/* Remaining cells - scrollable */}
+      {columns.slice(2).map((column) => (
+        <TableCell 
+          key={column.key}
+          className={cn("py-2 bg-muted/50", column.width)}
+        />
+      ))}
+      {/* Actions cell */}
+      <TableCell className="py-2 sticky right-0 z-30 bg-muted/50 w-12 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]" />
     </TableRow>
   );
 

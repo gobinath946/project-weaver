@@ -144,7 +144,7 @@ const TaskDetailModal = ({ open, onClose, taskId, projectId }: TaskDetailModalPr
 
         <div className="flex flex-1 overflow-hidden">
           {/* Left Panel - Task List */}
-          <div className="w-[30%] border-r flex flex-col">
+          <div className="w-[20%] border-r flex flex-col">
             <div className="px-3 py-2 border-b bg-muted/30">
               <h3 className="text-sm font-medium">{task?.task_list_id?.name || 'Tasks'}</h3>
             </div>
@@ -185,7 +185,7 @@ const TaskDetailModal = ({ open, onClose, taskId, projectId }: TaskDetailModalPr
           </div>
 
           {/* Right Panel - Task Details */}
-          <div className="w-[70%] flex flex-col overflow-hidden">
+          <div className="w-[80%] flex flex-col overflow-hidden">
             {taskLoading ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-muted-foreground">Loading...</div>
@@ -260,7 +260,7 @@ const TaskDetailModal = ({ open, onClose, taskId, projectId }: TaskDetailModalPr
                         <ChevronDown className="h-4 w-4" /> Task Information
                       </h4>
                       
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-6 gap-4">
                         {/* Owners */}
                         <div>
                           <Label className="text-xs text-muted-foreground">Owner</Label>
