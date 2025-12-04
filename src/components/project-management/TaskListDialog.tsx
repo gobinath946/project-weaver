@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { projectServices } from "@/api/services";
+import { TASK_LIST_FLAG } from "@/constants/taskConstants";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, X, Plus } from "lucide-react";
 
 interface TaskListDialogProps {
   open: boolean;
@@ -24,9 +30,13 @@ const TaskListDialog = ({ open, onClose, taskList, projectId, onSuccess }: TaskL
 
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     project_id: projectId || "",
+    related_milestone: "",
+    task_list_flag: "Internal",
+    tags: [] as string[],
   });
+
+  const [tagInput, setTagInput] = useState("");
 
   const { data: projectsData } = useQuery({
     queryKey: ["projects-list"],
@@ -41,18 +51,22 @@ const TaskListDialog = ({ open, onClose, taskList, projectId, onSuccess }: TaskL
     if (taskList) {
       setFormData({
         name: taskList.name || "",
-        description: taskList.description || "",
         project_id: taskList.project_id?._id || taskList.project_id || projectId || "",
+        related_milestone: taskList.related_milestone?._id || "",
+        task_list_flag: taskList.task_list_flag || "Internal",
+        tags: taskList.tags || [],
       });
     } else {
       setFormData({
         name: "",
-        description: "",
         project_id: projectId || "",
+        related_milestone: "",
+        task_list_flag: "Internal",
+        tags: [],
       });
     }
+    setTagInput("");
   }, [taskList, projectId, open]);
-
 
   const createMutation = useMutation({
     mutationFn: (data: any) => projectServices.createTaskList(data.project_id, data),
@@ -78,68 +92,152 @@ const TaskListDialog = ({ open, onClose, taskList, projectId, onSuccess }: TaskL
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const data = {
+      ...formData,
+      related_milestone: formData.related_milestone || undefined,
+    };
     if (isEdit) {
-      updateMutation.mutate(formData);
+      updateMutation.mutate(data);
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(data);
     }
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Task List" : "Create Task List"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Name *</Label>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter task list name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Enter description"
-              rows={3}
-            />
-          </div>
-          {!projectId && (
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
+        <SheetHeader className="px-6 py-4 border-b">
+          <SheetTitle>{isEdit ? "Edit Task List" : "New Task List"}</SheetTitle>
+        </SheetHeader>
+
+        <ScrollArea className="flex-1">
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* Project */}
+            {!projectId && (
+              <div className="space-y-2">
+                <Label>Project <span className="text-destructive">*</span></Label>
+                <Select
+                  value={formData.project_id}
+                  onValueChange={(v) => setFormData({ ...formData, project_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectsData?.map((p: any) => (
+                      <SelectItem key={p._id} value={p._id}>{p.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Task List Name */}
             <div className="space-y-2">
-              <Label>Project *</Label>
+              <Label>Task List <span className="text-destructive">*</span></Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter task list name"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Clone from Task Template | Clone from a Project or Project Template
+              </p>
+            </div>
+
+            {/* Related Milestone */}
+            <div className="space-y-2">
+              <Label>Related Milestone</Label>
               <Select
-                value={formData.project_id}
-                onValueChange={(v) => setFormData({ ...formData, project_id: v })}
+                value={formData.related_milestone || "none"}
+                onValueChange={(v) => setFormData({ ...formData, related_milestone: v === "none" ? "" : v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select project" />
+                  <SelectValue placeholder="None" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projectsData?.map((p: any) => (
-                    <SelectItem key={p._id} value={p._id}>{p.title}</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                  {/* Milestones would be loaded here */}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Task List Flag */}
+            <div className="space-y-2">
+              <Label>Task List Flag</Label>
+              <Select
+                value={formData.task_list_flag}
+                onValueChange={(v) => setFormData({ ...formData, task_list_flag: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TASK_LIST_FLAG.map((flag) => (
+                    <SelectItem key={flag} value={flag}>{flag}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={isLoading || !formData.name || !formData.project_id}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEdit ? "Update" : "Create"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+
+            {/* Tags */}
+            <div className="space-y-2">
+              <Label>Tags</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  placeholder="Enter a tag name"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" size="icon" onClick={handleAddTag}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="gap-1">
+                      {tag}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => handleRemoveTag(tag)} />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </form>
+        </ScrollArea>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 p-4 border-t">
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={handleSubmit} disabled={isLoading}>Add More</Button>
+          <Button onClick={handleSubmit} disabled={isLoading || !formData.name || !formData.project_id}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEdit ? "Update" : "Add"}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 

@@ -348,12 +348,15 @@ export const projectServices = {
 
   // Tasks
   getTasks: (params?: any) => apiClient.get("/api/tasks", { params }),
+  getTasksGrouped: (params?: any) => apiClient.get("/api/tasks/grouped", { params }),
   getTask: (id: string) => apiClient.get(`/api/tasks/${id}`),
   createTask: (data: any) => apiClient.post("/api/tasks", data),
   updateTask: (id: string, data: any) => apiClient.put(`/api/tasks/${id}`, data),
   deleteTask: (id: string) => apiClient.delete(`/api/tasks/${id}`),
   getTasksKanban: (params?: any) => apiClient.get("/api/tasks/kanban", { params }),
   getTasksByProject: (projectId: string, params?: any) => apiClient.get(`/api/tasks/projects/${projectId}/tasks`, { params }),
+  getSubtasks: (taskId: string) => apiClient.get(`/api/tasks/${taskId}/subtasks`),
+  getAllTaskLists: (params?: any) => apiClient.get("/api/task-lists", { params }),
 
   // Bugs
   getBugs: (params?: any) => apiClient.get("/api/bugs", { params }),

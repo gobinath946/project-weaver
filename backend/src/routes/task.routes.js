@@ -2,12 +2,15 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const {
   getTasks,
+  getTasksGrouped,
   getTask,
   createTask,
   updateTask,
   deleteTask,
   getTasksByProject,
-  getTasksKanban
+  getTasksKanban,
+  getAllTaskLists,
+  getSubtasks
 } = require('../controllers/task.controller');
 const { protect } = require('../middleware/auth');
 
@@ -32,11 +35,20 @@ router.use(protect);
 // @route   GET /api/tasks/kanban
 router.get('/kanban', getTasksKanban);
 
+// @route   GET /api/tasks/grouped
+router.get('/grouped', getTasksGrouped);
+
+// @route   GET /api/tasks/task-lists
+router.get('/task-lists', getAllTaskLists);
+
 // @route   GET /api/tasks
 router.get('/', getTasks);
 
 // @route   GET /api/tasks/:id
 router.get('/:id', getTask);
+
+// @route   GET /api/tasks/:id/subtasks
+router.get('/:id/subtasks', getSubtasks);
 
 // @route   POST /api/tasks
 router.post(
@@ -44,8 +56,8 @@ router.post(
   [
     body('name')
       .trim()
-      .isLength({ min: 1, max: 200 })
-      .withMessage('Name is required and must be less than 200 characters'),
+      .isLength({ min: 1, max: 500 })
+      .withMessage('Name is required and must be less than 500 characters'),
     body('project_id')
       .notEmpty()
       .withMessage('Project ID is required')
@@ -60,7 +72,7 @@ router.put('/:id', updateTask);
 // @route   DELETE /api/tasks/:id
 router.delete('/:id', deleteTask);
 
-// @route   GET /api/projects/:projectId/tasks
+// @route   GET /api/tasks/projects/:projectId/tasks
 router.get('/projects/:projectId/tasks', getTasksByProject);
 
 module.exports = router;

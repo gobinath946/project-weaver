@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const {
   getTaskLists,
+  getAllTaskLists,
   createTaskList,
   updateTaskList,
   deleteTaskList,
@@ -26,6 +27,9 @@ const validateRequest = (req, res, next) => {
 
 // All routes require authentication
 router.use(protect);
+
+// @route   GET /api/task-lists (all task lists across projects)
+router.get('/task-lists', getAllTaskLists);
 
 // @route   GET /api/projects/:projectId/task-lists
 router.get('/projects/:projectId/task-lists', getTaskLists);

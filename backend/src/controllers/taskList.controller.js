@@ -1,5 +1,6 @@
 const TaskList = require('../models/TaskList');
 const Project = require('../models/Project');
+const Task = require('../models/Task');
 
 // @desc    Get task lists by project
 // @route   GET /api/projects/:projectId/task-lists
@@ -26,6 +27,7 @@ const getTaskLists = async (req, res) => {
       company_id: req.user.company_id
     })
       .populate('created_by', 'first_name last_name email')
+      .populate('related_milestone', 'name')
       .sort({ order: 1 });
     
     res.status(200).json({
@@ -41,13 +43,57 @@ const getTaskLists = async (req, res) => {
   }
 };
 
+// @desc    Get all task lists across projects
+// @route   GET /api/task-lists
+// @access  Private
+const getAllTaskLists = async (req, res) => {
+  try {
+    const { project_id, search, page = 1, limit = 50 } = req.query;
+    
+    const query = { company_id: req.user.company_id };
+    
+    if (project_id) query.project_id = project_id;
+    if (search) query.name = { $regex: search, $options: 'i' };
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const [taskLists, total] = await Promise.all([
+      TaskList.find(query)
+        .populate('project_id', 'title project_id')
+        .populate('created_by', 'first_name last_name email')
+        .populate('related_milestone', 'name')
+        .sort({ order: 1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      TaskList.countDocuments(query)
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      data: taskLists,
+      pagination: {
+        current_page: parseInt(page),
+        total_pages: Math.ceil(total / parseInt(limit)),
+        total_count: total,
+        has_more: skip + taskLists.length < total
+      }
+    });
+  } catch (error) {
+    console.error('Get all task lists error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching task lists'
+    });
+  }
+};
+
 // @desc    Create task list
 // @route   POST /api/projects/:projectId/task-lists
 // @access  Private
 const createTaskList = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { name, description } = req.body;
+    const { name, description, related_milestone, task_list_flag, tags } = req.body;
     
     // Verify project exists
     const project = await Project.findOne({
@@ -79,11 +125,17 @@ const createTaskList = async (req, res) => {
       description,
       project_id: projectId,
       company_id: req.user.company_id,
+      related_milestone: related_milestone || undefined,
+      task_list_flag: task_list_flag || 'Internal',
+      tags: tags || [],
       order: maxOrder ? maxOrder.order + 1 : 0,
       created_by: req.user.id
     });
     
     await taskList.save();
+    
+    await taskList.populate('project_id', 'title project_id');
+    await taskList.populate('created_by', 'first_name last_name email');
     
     res.status(201).json({
       success: true,
@@ -116,13 +168,19 @@ const updateTaskList = async (req, res) => {
       });
     }
     
-    const { name, description, is_active } = req.body;
+    const { name, description, is_active, related_milestone, task_list_flag, tags } = req.body;
     
     if (name !== undefined) taskList.name = name;
     if (description !== undefined) taskList.description = description;
     if (is_active !== undefined) taskList.is_active = is_active;
+    if (related_milestone !== undefined) taskList.related_milestone = related_milestone || null;
+    if (task_list_flag !== undefined) taskList.task_list_flag = task_list_flag;
+    if (tags !== undefined) taskList.tags = tags;
     
     await taskList.save();
+    
+    await taskList.populate('project_id', 'title project_id');
+    await taskList.populate('created_by', 'first_name last_name email');
     
     res.status(200).json({
       success: true,
@@ -156,7 +214,6 @@ const deleteTaskList = async (req, res) => {
     }
     
     // Update tasks to remove task_list_id reference
-    const Task = require('../models/Task');
     await Task.updateMany(
       { task_list_id: req.params.id },
       { $set: { task_list_id: null } }
@@ -217,6 +274,7 @@ const reorderTaskLists = async (req, res) => {
 
 module.exports = {
   getTaskLists,
+  getAllTaskLists,
   createTaskList,
   updateTaskList,
   deleteTaskList,

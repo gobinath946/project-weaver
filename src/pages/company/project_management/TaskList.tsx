@@ -1,40 +1,43 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { projectServices } from "@/api/services";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { ViewToggle, ViewMode } from "@/components/project-management/ViewToggle";
-import { StatusBadge } from "@/components/project-management/StatusBadge";
-import { PriorityBadge } from "@/components/project-management/PriorityBadge";
-import KanbanBoard from "@/components/project-management/KanbanBoard";
+import TaskListView from "@/components/project-management/TaskListView";
+import TaskKanbanView from "@/components/project-management/TaskKanbanView";
 import TaskDialog from "@/components/project-management/TaskDialog";
+import TaskListDialog from "@/components/project-management/TaskListDialog";
+import TaskFilterSheet, { TaskFilters } from "@/components/project-management/TaskFilterSheet";
+import TaskDetailModal from "@/components/project-management/TaskDetailModal";
+import { GROUP_BY_OPTIONS } from "@/constants/taskConstants";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
-import { Plus, Search, MoreVertical, Edit, Trash2, ListCheck, User } from "lucide-react";
+import { Plus, Filter, ListCheck, ChevronDown, ListPlus, LayoutList } from "lucide-react";
 
 const TaskList = () => {
   const [view, setView] = useState<ViewMode>("list");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [projectFilter, setProjectFilter] = useState<string>("all");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [groupBy, setGroupBy] = useState<'task_list' | 'project' | 'none'>('task_list');
+  const [filters, setFilters] = useState<TaskFilters>({ filter_mode: 'all' });
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [taskListDialogOpen, setTaskListDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Fetch projects for filter
+  // Fetch projects for filter and kanban
   const { data: projectsData } = useQuery({
     queryKey: ["projects-list"],
     queryFn: async () => {
@@ -43,34 +46,57 @@ const TaskList = () => {
     },
   });
 
-  // Fetch tasks for list view
+  // Build query params from filters
+  const buildQueryParams = (pageParam: number) => {
+    const params: any = { page: pageParam, limit: 30 };
+    
+    if (filters.search) params.search = filters.search;
+    if (filters.status) params.status = filters.status;
+    if (filters.priority) params.priority = filters.priority;
+    if (filters.project_id) params.project_id = filters.project_id;
+    if (filters.task_list_id) params.task_list_id = filters.task_list_id;
+    if (filters.owner) params.owner = filters.owner;
+    if (filters.current_owner) params.current_owner = filters.current_owner;
+    if (filters.billing_type) params.billing_type = filters.billing_type;
+    if (filters.created_by) params.created_by = filters.created_by;
+    if (filters.tags) params.tags = filters.tags;
+    if (filters.time_span) params.time_span = filters.time_span;
+    if (filters.start_date_from) params.start_date_from = filters.start_date_from.toISOString();
+    if (filters.start_date_to) params.start_date_to = filters.start_date_to.toISOString();
+    if (filters.due_date_from) params.due_date_from = filters.due_date_from.toISOString();
+    if (filters.due_date_to) params.due_date_to = filters.due_date_to.toISOString();
+    if (filters.created_from) params.created_from = filters.created_from.toISOString();
+    if (filters.created_to) params.created_to = filters.created_to.toISOString();
+    
+    return params;
+  };
+
+  // Fetch tasks for list view (flat)
   const {
-    data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch,
+    data: tasksData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: tasksLoading,
+    refetch: refetchTasks,
   } = useInfiniteQuery({
-    queryKey: ["tasks", search, statusFilter, projectFilter],
+    queryKey: ["tasks", filters, groupBy],
     queryFn: async ({ pageParam = 1 }) => {
-      const params: any = { page: pageParam, limit: 20 };
-      if (search) params.search = search;
-      if (statusFilter && statusFilter !== "all") params.status = statusFilter;
-      if (projectFilter && projectFilter !== "all") params.project_id = projectFilter;
+      const params = buildQueryParams(pageParam);
+      if (groupBy !== 'none') {
+        params.group_by = groupBy;
+        const response = await projectServices.getTasksGrouped(params);
+        return response.data;
+      }
       const response = await projectServices.getTasks(params);
       return response.data;
     },
-    getNextPageParam: (lastPage) => lastPage.pagination.has_more ? lastPage.pagination.current_page + 1 : undefined,
+    getNextPageParam: (lastPage) => {
+      if (groupBy !== 'none') return undefined; // No pagination for grouped view
+      return lastPage.pagination?.has_more ? lastPage.pagination.current_page + 1 : undefined;
+    },
     initialPageParam: 1,
     enabled: view === "list",
-  });
-
-  // Fetch kanban data
-  const { data: kanbanData, isLoading: kanbanLoading } = useQuery({
-    queryKey: ["tasks-kanban", projectFilter],
-    queryFn: async () => {
-      const params: any = {};
-      if (projectFilter && projectFilter !== "all") params.project_id = projectFilter;
-      const response = await projectServices.getTasksKanban(params);
-      return response.data.data;
-    },
-    enabled: view === "kanban",
   });
 
   const deleteMutation = useMutation({
@@ -84,24 +110,24 @@ const TaskList = () => {
     },
   });
 
-  const { loadMoreRef } = useInfiniteScroll({
+  const { loadMoreRef: scrollRef } = useInfiniteScroll({
     hasMore: !!hasNextPage,
     isLoading: isFetchingNextPage,
     onLoadMore: fetchNextPage,
   });
 
-  const tasks = data?.pages.flatMap((page) => page.data) || [];
-
-  const kanbanColumns = kanbanData ? [
-    { id: "not-started", title: "Not Started", items: kanbanData["Not Started"] || [], color: "gray" },
-    { id: "in-progress", title: "In Progress", items: kanbanData["In Progress"] || [], color: "blue" },
-    { id: "on-hold", title: "On Hold", items: kanbanData["On Hold"] || [], color: "orange" },
-    { id: "completed", title: "Completed", items: kanbanData["Completed"] || [], color: "green" },
-  ] : [];
+  // Process tasks data
+  const tasks = groupBy === 'none' 
+    ? tasksData?.pages.flatMap((page) => page.data) || []
+    : [];
+  
+  const groupedTasks = groupBy !== 'none' && tasksData?.pages[0]?.data 
+    ? tasksData.pages[0].data 
+    : undefined;
 
   const handleEdit = (task: any) => {
     setSelectedTask(task);
-    setDialogOpen(true);
+    setTaskDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -110,148 +136,164 @@ const TaskList = () => {
     }
   };
 
+  const handleView = (task: any) => {
+    setSelectedTaskId(task._id);
+    setDetailModalOpen(true);
+  };
+
+  const handleApplyFilters = (newFilters: TaskFilters) => {
+    setFilters(newFilters);
+  };
+
+  const activeFilterCount = Object.entries(filters).filter(
+    ([key, value]) => key !== 'filter_mode' && value && value !== ''
+  ).length;
+
   return (
     <DashboardLayout title="Tasks">
-      <div className="space-y-4">
+      <div className="h-full flex flex-col">
         {/* Header Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="flex flex-1 gap-2 flex-wrap">
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search tasks..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-            </div>
-            <Select value={projectFilter} onValueChange={setProjectFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                {projectsData?.map((p: any) => (
-                  <SelectItem key={p._id} value={p._id}>{p.title}</SelectItem>
+        <div className="flex flex-col sm:flex-row gap-4 justify-between p-4 border-b">
+          <div className="flex items-center gap-2">
+            {/* Group By Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LayoutList className="h-4 w-4" />
+                  Group By: {GROUP_BY_OPTIONS.find(o => o.value === groupBy)?.label || 'None'}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setGroupBy('none')}>
+                  Default Views
+                </DropdownMenuItem>
+                {GROUP_BY_OPTIONS.map((option) => (
+                  <DropdownMenuItem key={option.value} onClick={() => setGroupBy(option.value as any)}>
+                    {option.label}
+                  </DropdownMenuItem>
                 ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Not Started">Not Started</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="On Hold">On Hold</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-2">
             <ViewToggle view={view} onViewChange={setView} />
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setTaskDialogOpen(true)}>
+                  <ListCheck className="h-4 w-4 mr-2" />
+                  Add Task
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTaskListDialogOpen(true)}>
+                  <ListPlus className="h-4 w-4 mr-2" />
+                  Add Task List
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button variant="outline" size="icon" onClick={() => setFilterSheetOpen(true)} className="relative">
+              <Filter className="h-4 w-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
             </Button>
           </div>
         </div>
 
         {/* Content */}
-        {view === "list" ? (
-          isLoading ? (
-            <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+        <div className="flex-1 overflow-hidden">
+          {view === "list" ? (
+            tasksLoading ? (
+              <div className="space-y-2 p-4">
+                {[...Array(10)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : (
+              <TaskListView
+                tasks={tasks}
+                groupedTasks={groupedTasks}
+                isLoading={tasksLoading}
+                groupBy={groupBy}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                loadMoreRef={scrollRef}
+                isFetchingMore={isFetchingNextPage}
+              />
+            )
           ) : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Task</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Assignee</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tasks.map((task: any) => (
-                    <TableRow key={task._id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{task.name}</p>
-                          <p className="text-xs text-muted-foreground">{task.task_id}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">{task.project_id?.title}</span>
-                      </TableCell>
-                      <TableCell>
-                        {task.assignee && (
-                          <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                              {task.assignee.first_name?.charAt(0)}
-                            </div>
-                            <span className="text-sm">{task.assignee.first_name}</span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell><StatusBadge status={task.status} /></TableCell>
-                      <TableCell><PriorityBadge priority={task.priority} /></TableCell>
-                      <TableCell>
-                        {task.due_date && (
-                          <span className="text-sm text-muted-foreground">
-                            {format(new Date(task.due_date), "MMM d, yyyy")}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(task)}>
-                              <Edit className="h-4 w-4 mr-2" />Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(task._id)} className="text-destructive">
-                              <Trash2 className="h-4 w-4 mr-2" />Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <TaskKanbanView
+              projects={projectsData || []}
+              onTaskClick={handleView}
+            />
+          )}
+
+          {!tasksLoading && tasks.length === 0 && !groupedTasks && view === "list" && (
+            <div className="text-center py-12">
+              <ListCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No tasks found</h3>
+              <p className="text-muted-foreground mb-4">Create your first task to get started</p>
+              <Button onClick={() => setTaskDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Task
+              </Button>
             </div>
-          )
-        ) : (
-          kanbanLoading ? (
-            <div className="flex gap-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96 w-80" />)}</div>
-          ) : (
-            <KanbanBoard columns={kanbanColumns} type="task" onItemClick={handleEdit} />
-          )
-        )}
-
-        {view === "list" && (
-          <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-            {isFetchingNextPage && <div className="text-sm text-muted-foreground">Loading more...</div>}
-          </div>
-        )}
-
-        {!isLoading && tasks.length === 0 && view === "list" && (
-          <div className="text-center py-12">
-            <ListCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No tasks found</h3>
-            <p className="text-muted-foreground mb-4">Create your first task to get started</p>
-            <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Create Task</Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
+      {/* Dialogs */}
       <TaskDialog
-        open={dialogOpen}
-        onClose={() => { setDialogOpen(false); setSelectedTask(null); }}
+        open={taskDialogOpen}
+        onClose={() => {
+          setTaskDialogOpen(false);
+          setSelectedTask(null);
+        }}
         task={selectedTask}
-        onSuccess={() => { setDialogOpen(false); setSelectedTask(null); refetch(); queryClient.invalidateQueries({ queryKey: ["tasks-kanban"] }); }}
+        onSuccess={() => {
+          setTaskDialogOpen(false);
+          setSelectedTask(null);
+          refetchTasks();
+          queryClient.invalidateQueries({ queryKey: ["tasks-kanban"] });
+        }}
+      />
+
+      <TaskListDialog
+        open={taskListDialogOpen}
+        onClose={() => setTaskListDialogOpen(false)}
+        onSuccess={() => {
+          setTaskListDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["task-lists"] });
+          queryClient.invalidateQueries({ queryKey: ["all-task-lists"] });
+        }}
+      />
+
+      <TaskFilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+      />
+
+      <TaskDetailModal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setSelectedTaskId(null);
+        }}
+        taskId={selectedTaskId}
       />
     </DashboardLayout>
   );

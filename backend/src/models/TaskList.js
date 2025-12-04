@@ -22,6 +22,20 @@ const TaskListSchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Description cannot exceed 500 characters']
   },
+  related_milestone: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Milestone',
+    default: null
+  },
+  task_list_flag: {
+    type: String,
+    enum: ['Internal', 'External', 'None'],
+    default: 'Internal'
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
   order: {
     type: Number,
     default: 0
@@ -57,6 +71,7 @@ TaskListSchema.index({ project_id: 1 });
 TaskListSchema.index({ company_id: 1 });
 TaskListSchema.index({ order: 1 });
 TaskListSchema.index({ is_active: 1 });
+TaskListSchema.index({ tags: 1 });
 
 // Update timestamp on save
 TaskListSchema.pre('save', function(next) {
@@ -68,7 +83,10 @@ TaskListSchema.pre('save', function(next) {
 TaskListSchema.methods.updateTaskCounts = async function() {
   const Task = mongoose.model('Task');
   const totalTasks = await Task.countDocuments({ task_list_id: this._id });
-  const completedTasks = await Task.countDocuments({ task_list_id: this._id, status: 'Completed' });
+  const completedTasks = await Task.countDocuments({ 
+    task_list_id: this._id, 
+    status: { $in: ['Closed', 'Resolved'] }
+  });
   
   this.task_count = totalTasks;
   this.completed_task_count = completedTasks;
