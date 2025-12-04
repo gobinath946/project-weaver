@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -10,13 +10,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Collapsible, CollapsibleContent, CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import { MoreVertical, Edit, Trash2, Eye, ChevronDown, ChevronRight } from "lucide-react";
 import { TASK_STATUS_COLORS } from "@/constants/taskConstants";
 import { cn } from "@/lib/utils";
+
+// Fixed column width in pixels for proper sticky positioning
+const ID_COLUMN_WIDTH = 100;
 
 interface Task {
   _id: string;
@@ -84,18 +84,18 @@ const TaskListView = ({
   };
 
   const columns = useMemo(() => [
-    { key: 'task_id', label: 'ID', fixed: true, width: 'w-28' },
-    { key: 'name', label: 'Task Name', fixed: true, width: 'min-w-[250px]' },
-    { key: 'project', label: 'Project', width: 'w-40' },
-    { key: 'owner', label: 'Owner', width: 'w-44' },
-    { key: 'status', label: 'Status', width: 'w-36' },
-    { key: 'tags', label: 'Tags', width: 'w-32' },
-    { key: 'start_date', label: 'Start Date', width: 'w-28' },
-    { key: 'due_date', label: 'Due Date', width: 'w-28' },
-    { key: 'duration', label: 'Duration', width: 'w-24' },
-    { key: 'priority', label: 'Priority', width: 'w-24' },
-    { key: 'completion', label: '% Complete', width: 'w-28' },
-    { key: 'time_logged', label: 'Time Log', width: 'w-24' },
+    { key: 'task_id', label: 'ID', fixed: true, width: 'w-[100px] min-w-[100px]' },
+    { key: 'name', label: 'Task Name', fixed: true, width: 'w-[220px] min-w-[220px]' },
+    { key: 'project', label: 'Project', width: 'w-[140px] min-w-[140px]' },
+    { key: 'owner', label: 'Owner', width: 'w-[140px] min-w-[140px]' },
+    { key: 'status', label: 'Status', width: 'w-[120px] min-w-[120px]' },
+    { key: 'tags', label: 'Tags', width: 'w-[100px] min-w-[100px]' },
+    { key: 'start_date', label: 'Start Date', width: 'w-[110px] min-w-[110px]' },
+    { key: 'due_date', label: 'Due Date', width: 'w-[110px] min-w-[110px]' },
+    { key: 'duration', label: 'Duration', width: 'w-[90px] min-w-[90px]' },
+    { key: 'priority', label: 'Priority', width: 'w-[90px] min-w-[90px]' },
+    { key: 'completion', label: '% Complete', width: 'w-[110px] min-w-[110px]' },
+    { key: 'time_logged', label: 'Time Log', width: 'w-[90px] min-w-[90px]' },
   ], []);
 
   const formatTimeLogged = (minutes?: number) => {
@@ -221,15 +221,20 @@ const TaskListView = ({
           key={column.key}
           className={cn(
             column.width,
+            "whitespace-nowrap",
             column.fixed && "sticky bg-background",
-            column.key === 'task_id' && "left-0 z-10",
-            column.key === 'name' && "left-28 z-10"
+            column.key === 'task_id' && "left-0 z-20 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-border",
+            column.key === 'name' && "left-[100px] z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
           )}
+          style={{
+            ...(column.key === 'task_id' && { left: 0 }),
+            ...(column.key === 'name' && { left: `${ID_COLUMN_WIDTH}px` }),
+          }}
         >
           {renderCellContent(task, column.key)}
         </TableCell>
       ))}
-      <TableCell className="sticky right-0 bg-background z-10">
+      <TableCell className="sticky right-0 bg-background z-20 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -264,53 +269,68 @@ const TaskListView = ({
     );
   }
 
-  // Grouped view
+  // Render group header row
+  const renderGroupHeader = (groupName: string, taskCount: number, isExpanded: boolean) => (
+    <TableRow 
+      className="bg-muted/50 hover:bg-muted cursor-pointer"
+      onClick={() => toggleGroup(groupName)}
+    >
+      <TableCell 
+        colSpan={columns.length + 1}
+        className="py-2 sticky left-0 bg-muted/50 hover:bg-muted"
+      >
+        <div className="flex items-center gap-2">
+          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <span className="font-medium">{groupName}</span>
+          <Badge variant="secondary" className="text-xs">{taskCount}</Badge>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
+  // Grouped view - single header at top with inline group headers
   if (groupBy !== 'none' && groupedTasks) {
     return (
       <div ref={scrollContainerRef} className="relative h-full overflow-auto">
-        {Object.entries(groupedTasks).map(([groupName, groupData]) => {
-          const groupTasks = Array.isArray(groupData) ? groupData : groupData.tasks;
-          const taskCount = groupTasks.length;
-          const isExpanded = expandedGroups[groupName] !== false;
+        <Table className="min-w-max">
+          <TableHeader className="sticky top-0 bg-background z-40">
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead
+                  key={column.key}
+                  className={cn(
+                    "whitespace-nowrap bg-background",
+                    column.width,
+                    column.fixed && "sticky",
+                    column.key === 'task_id' && "left-0 z-50 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-border",
+                    column.key === 'name' && "z-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                  )}
+                  style={{
+                    ...(column.key === 'task_id' && { left: 0 }),
+                    ...(column.key === 'name' && { left: `${ID_COLUMN_WIDTH}px` }),
+                  }}
+                >
+                  {column.label}
+                </TableHead>
+              ))}
+              <TableHead className="w-12 sticky right-0 bg-background z-50 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Object.entries(groupedTasks).map(([groupName, groupData]) => {
+              const groupTasks = Array.isArray(groupData) ? groupData : groupData.tasks;
+              const taskCount = groupTasks.length;
+              const isExpanded = expandedGroups[groupName] !== false;
 
-          return (
-            <Collapsible key={groupName} open={isExpanded} onOpenChange={() => toggleGroup(groupName)}>
-              <CollapsibleTrigger asChild>
-                <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 cursor-pointer hover:bg-muted sticky top-0 z-30">
-                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  <span className="font-medium">{groupName}</span>
-                  <Badge variant="secondary" className="text-xs">{taskCount}</Badge>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <Table>
-                  <TableHeader className="sticky top-10 bg-background z-20">
-                    <TableRow>
-                      {columns.map((column) => (
-                        <TableHead
-                          key={column.key}
-                          className={cn(
-                            "whitespace-nowrap",
-                            column.width,
-                            column.fixed && "sticky bg-background z-10",
-                            column.key === 'task_id' && "left-0",
-                            column.key === 'name' && "left-28"
-                          )}
-                        >
-                          {column.label}
-                        </TableHead>
-                      ))}
-                      <TableHead className="w-12 sticky right-0 bg-background z-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {groupTasks.map(renderTaskRow)}
-                  </TableBody>
-                </Table>
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
+              return (
+                <React.Fragment key={groupName}>
+                  {renderGroupHeader(groupName, taskCount, isExpanded)}
+                  {isExpanded && groupTasks.map(renderTaskRow)}
+                </React.Fragment>
+              );
+            })}
+          </TableBody>
+        </Table>
       </div>
     );
   }
@@ -318,24 +338,28 @@ const TaskListView = ({
   // Flat list view
   return (
     <div ref={scrollContainerRef} className="relative h-full overflow-auto">
-      <Table>
-        <TableHeader className="sticky top-0 bg-background z-20">
+      <Table className="min-w-max">
+        <TableHeader className="sticky top-0 bg-background z-40">
           <TableRow>
             {columns.map((column) => (
               <TableHead
                 key={column.key}
                 className={cn(
-                  "whitespace-nowrap",
+                  "whitespace-nowrap bg-background",
                   column.width,
-                  column.fixed && "sticky bg-background z-10",
-                  column.key === 'task_id' && "left-0",
-                  column.key === 'name' && "left-28"
+                  column.fixed && "sticky",
+                  column.key === 'task_id' && "left-0 z-50 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-border",
+                  column.key === 'name' && "z-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
                 )}
+                style={{
+                  ...(column.key === 'task_id' && { left: 0 }),
+                  ...(column.key === 'name' && { left: `${ID_COLUMN_WIDTH}px` }),
+                }}
               >
                 {column.label}
               </TableHead>
             ))}
-            <TableHead className="w-12 sticky right-0 bg-background z-10"></TableHead>
+            <TableHead className="w-12 sticky right-0 bg-background z-50 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
