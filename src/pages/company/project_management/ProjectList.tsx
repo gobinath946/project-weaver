@@ -46,16 +46,16 @@ const ProjectList = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [filters, setFilters] = useState<ProjectFilters>({ filter_mode: 'all' });
-  
+
   // Pagination state
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [paginationEnabled, setPaginationEnabled] = useState(true);
   const [goToPage, setGoToPage] = useState("");
-  
+
   // Sort state
   const [sortField, setSortField] = useState("-created_at");
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -148,9 +148,9 @@ const ProjectList = () => {
     }
   };
 
-  const hasActiveFilters = Object.entries(filters).some(
-    ([key, value]) => key !== 'filter_mode' && value !== undefined && value !== null && value !== ''
-  );
+  const activeFilterCount = Object.entries(filters).filter(
+    ([key, value]) => key !== 'filter_mode' && value && value !== ''
+  ).length;
 
   return (
     <DashboardLayout title="Projects">
@@ -203,8 +203,10 @@ const ProjectList = () => {
                 >
                   <Filter className="h-4 w-4 mr-1" />
                   Filter
-                  {hasActiveFilters && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full" />
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
                   )}
                 </Button>
               </>
@@ -290,7 +292,7 @@ const ProjectList = () => {
                       className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
-                  
+
                   {[...Array(Math.min(5, pagination.total_pages))].map((_, i) => {
                     let pageNum;
                     if (pagination.total_pages <= 5) {
@@ -302,7 +304,7 @@ const ProjectList = () => {
                     } else {
                       pageNum = page - 2 + i;
                     }
-                    
+
                     return (
                       <PaginationItem key={pageNum}>
                         <PaginationLink
@@ -315,7 +317,7 @@ const ProjectList = () => {
                       </PaginationItem>
                     );
                   })}
-                  
+
                   <PaginationItem>
                     <PaginationNext
                       onClick={() => page < pagination.total_pages && setPage(page + 1)}
@@ -343,7 +345,7 @@ const ProjectList = () => {
                   />
                 </div>
               )}
-              
+
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Total Count:</span>
                 <Badge variant="outline">{pagination.total_count}</Badge>

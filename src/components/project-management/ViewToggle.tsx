@@ -11,38 +11,34 @@ interface ViewToggleProps {
   className?: string;
 }
 
-export const ViewToggle = ({ 
-  view, 
-  onViewChange, 
+export const ViewToggle = ({
+  view,
+  onViewChange,
   showCard = false,
-  className 
+  className
 }: ViewToggleProps) => {
   return (
-    <div className={cn("flex items-center gap-1 bg-muted/50 backdrop-blur-sm p-1 rounded-xl border border-border/50", className)}>
+    <div className="flex items-center border rounded-md">
+
       <Button
-        variant={view === "list" ? "default" : "ghost"}
+        variant={view === "list" ? "secondary" : "ghost"}
         size="sm"
+        className="h-8 px-3 rounded-r-none"
         onClick={() => onViewChange("list")}
-        className={cn(
-          "h-8 px-3 rounded-lg transition-all duration-200",
-          view === "list" && "shadow-sm"
-        )}
       >
-        <List className="h-4 w-4 mr-1.5" />
+        <List className="h-4 w-4 mr-1" />
         List
       </Button>
       <Button
-        variant={view === "kanban" ? "default" : "ghost"}
+        variant={view === "kanban" ? "secondary" : "ghost"}
         size="sm"
+        className="h-8 px-3 rounded-l-none"
         onClick={() => onViewChange("kanban")}
-        className={cn(
-          "h-8 px-3 rounded-lg transition-all duration-200",
-          view === "kanban" && "shadow-sm"
-        )}
       >
-        <Kanban className="h-4 w-4 mr-1.5" />
+        <LayoutGrid className="h-4 w-4 mr-1" />
         Kanban
       </Button>
+
       {showCard && (
         <Button
           variant={view === "card" ? "default" : "ghost"}
@@ -57,6 +53,7 @@ export const ViewToggle = ({
           Card
         </Button>
       )}
+
     </div>
   );
 };

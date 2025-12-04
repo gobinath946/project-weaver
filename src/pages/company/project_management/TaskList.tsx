@@ -32,7 +32,7 @@ const TaskList = () => {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -49,7 +49,7 @@ const TaskList = () => {
   // Build query params from filters
   const buildQueryParams = (pageParam: number) => {
     const params: any = { page: pageParam, limit: 30 };
-    
+
     if (filters.search) params.search = filters.search;
     if (filters.status) params.status = filters.status;
     if (filters.priority) params.priority = filters.priority;
@@ -67,7 +67,7 @@ const TaskList = () => {
     if (filters.due_date_to) params.due_date_to = filters.due_date_to.toISOString();
     if (filters.created_from) params.created_from = filters.created_from.toISOString();
     if (filters.created_to) params.created_to = filters.created_to.toISOString();
-    
+
     return params;
   };
 
@@ -117,12 +117,12 @@ const TaskList = () => {
   });
 
   // Process tasks data
-  const tasks = groupBy === 'none' 
+  const tasks = groupBy === 'none'
     ? tasksData?.pages.flatMap((page) => page.data) || []
     : [];
-  
-  const groupedTasks = groupBy !== 'none' && tasksData?.pages[0]?.data 
-    ? tasksData.pages[0].data 
+
+  const groupedTasks = groupBy !== 'none' && tasksData?.pages[0]?.data
+    ? tasksData.pages[0].data
     : undefined;
 
   const handleEdit = (task: any) => {
@@ -179,10 +179,24 @@ const TaskList = () => {
 
           <div className="flex items-center gap-2">
             <ViewToggle view={view} onViewChange={setView} />
-            
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilterSheetOpen(true)}
+              className="h-8 relative"
+            >
+              <Filter className="h-4 w-4 mr-1" />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="gap-2">
+                <Button size="sm" className="h-8">
                   <Plus className="h-4 w-4" />
                   Add
                   <ChevronDown className="h-4 w-4" />
@@ -200,14 +214,6 @@ const TaskList = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" size="icon" onClick={() => setFilterSheetOpen(true)} className="relative">
-              <Filter className="h-4 w-4" />
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
           </div>
         </div>
 
