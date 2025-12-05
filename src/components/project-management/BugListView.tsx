@@ -82,24 +82,28 @@ const BugListView = ({
 }: BugListViewProps) => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
+  // ID column: 80px, Bug Name column: 180px
+  const ID_COL_WIDTH = 80;
+  const TITLE_COL_WIDTH = 180;
+
   const columns = useMemo(() => [
-    { key: 'bug_id', label: 'ID', fixed: true, width: 'w-28' },
-    { key: 'title', label: 'Bug Name', fixed: true, width: 'min-w-[220px]' },
-    { key: 'project', label: 'Project', width: 'w-36' },
-    { key: 'reporter', label: 'Reporter', width: 'w-32' },
-    { key: 'created_at', label: 'Created At', width: 'w-32' },
-    { key: 'assignee', label: 'Assignee', width: 'w-32' },
-    { key: 'last_closed_time', label: 'Last Closed', width: 'w-32' },
-    { key: 'updated_at', label: 'Last Modified', width: 'w-36' },
-    { key: 'due_date', label: 'Due Date', width: 'w-28' },
-    { key: 'status', label: 'Status', width: 'w-36' },
-    { key: 'severity', label: 'Severity', width: 'w-28' },
-    { key: 'module', label: 'Module', width: 'w-28' },
-    { key: 'classification', label: 'Classification', width: 'w-36' },
-    { key: 'flag', label: 'Flag', width: 'w-24' },
-    { key: 'tags', label: 'Tags', width: 'w-32' },
-    { key: 'reproducible', label: 'Reproducible', width: 'w-28' },
-  ], []);
+    { key: 'bug_id', label: 'ID', sticky: true, left: 0, width: ID_COL_WIDTH },
+    { key: 'title', label: 'Bug Name', sticky: true, left: ID_COL_WIDTH, width: TITLE_COL_WIDTH },
+    { key: 'project', label: 'Project', width: 128 },
+    { key: 'reporter', label: 'Reporter', width: 128 },
+    { key: 'created_at', label: 'Created At', width: 128 },
+    { key: 'assignee', label: 'Assignee', width: 128 },
+    { key: 'last_closed_time', label: 'Last Closed', width: 128 },
+    { key: 'updated_at', label: 'Last Modified', width: 144 },
+    { key: 'due_date', label: 'Due Date', width: 112 },
+    { key: 'status', label: 'Status', width: 144 },
+    { key: 'severity', label: 'Severity', width: 112 },
+    { key: 'module', label: 'Module', width: 112 },
+    { key: 'classification', label: 'Classification', width: 144 },
+    { key: 'flag', label: 'Flag', width: 96 },
+    { key: 'tags', label: 'Tags', width: 128 },
+    { key: 'reproducible', label: 'Reproducible', width: 112 },
+  ], [ID_COL_WIDTH, TITLE_COL_WIDTH]);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => {
@@ -244,11 +248,14 @@ const BugListView = ({
       {columns.map((column) => (
         <TableCell
           key={column.key}
+          style={{ 
+            width: column.width, 
+            minWidth: column.width,
+            ...(column.sticky ? { left: column.left } : {})
+          }}
           className={cn(
-            column.width,
-            column.fixed && "sticky bg-background",
-            column.key === 'bug_id' && "left-0 z-10",
-            column.key === 'title' && "left-28 z-10"
+            column.sticky && "sticky bg-background z-10",
+            column.key === 'title' && "border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
           )}
         >
           {renderCellContent(bug, column.key)}
@@ -325,12 +332,15 @@ const BugListView = ({
                         {columns.map((column) => (
                           <TableHead
                             key={column.key}
+                            style={{ 
+                              width: column.width, 
+                              minWidth: column.width,
+                              ...(column.sticky ? { left: column.left } : {})
+                            }}
                             className={cn(
                               "whitespace-nowrap",
-                              column.width,
-                              column.fixed && "sticky bg-background z-10",
-                              column.key === 'bug_id' && "left-0",
-                              column.key === 'title' && "left-28"
+                              column.sticky && "sticky bg-background z-20",
+                              column.key === 'title' && "border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
                             )}
                           >
                             {column.label}
@@ -361,12 +371,15 @@ const BugListView = ({
             {columns.map((column) => (
               <TableHead
                 key={column.key}
+                style={{ 
+                  width: column.width, 
+                  minWidth: column.width,
+                  ...(column.sticky ? { left: column.left } : {})
+                }}
                 className={cn(
                   "whitespace-nowrap",
-                  column.width,
-                  column.fixed && "sticky bg-background z-10",
-                  column.key === 'bug_id' && "left-0",
-                  column.key === 'title' && "left-28"
+                  column.sticky && "sticky bg-background z-20",
+                  column.key === 'title' && "border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
                 )}
               >
                 {column.label}
