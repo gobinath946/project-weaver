@@ -360,12 +360,15 @@ export const projectServices = {
 
   // Bugs
   getBugs: (params?: any) => apiClient.get("/api/bugs", { params }),
+  getBugsGrouped: (params?: any) => apiClient.get("/api/bugs/grouped", { params }),
   getBug: (id: string) => apiClient.get(`/api/bugs/${id}`),
   createBug: (data: any) => apiClient.post("/api/bugs", data),
   updateBug: (id: string, data: any) => apiClient.put(`/api/bugs/${id}`, data),
   deleteBug: (id: string) => apiClient.delete(`/api/bugs/${id}`),
   getBugsKanban: (params?: any) => apiClient.get("/api/bugs/kanban", { params }),
   getBugsByProject: (projectId: string, params?: any) => apiClient.get(`/api/bugs/projects/${projectId}/bugs`, { params }),
+  linkBug: (id: string, data: any) => apiClient.post(`/api/bugs/${id}/link`, data),
+  associateBugTask: (id: string, data: any) => apiClient.post(`/api/bugs/${id}/associate-task`, data),
 
   // Time Logs
   getTimeLogs: (params?: any) => apiClient.get("/api/timelogs", { params }),

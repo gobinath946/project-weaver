@@ -15,7 +15,7 @@ const BugSchema = new mongoose.Schema({
   description: {
     type: String,
     trim: true,
-    maxlength: [2000, 'Description cannot exceed 2000 characters']
+    maxlength: [5000, 'Description cannot exceed 5000 characters']
   },
   project_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -41,20 +41,52 @@ const BugSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   status: {
     type: String,
-    enum: ['Open', 'In Progress', 'Testing', 'Moved to UAT', 'Ready for Production', 'Closed', 'Reopen'],
+    enum: [
+      'Open',
+      'In progress',
+      'Unit Testing',
+      'Moved to Testing',
+      'Testing in Progress',
+      'Ready for UAT',
+      'Ready for Production',
+      'Pending Customer Response',
+      'Pending Int. Resp',
+      'After Production',
+      'On Hold',
+      'Closed'
+    ],
     default: 'Open'
   },
   severity: {
     type: String,
-    enum: ['None', 'Minor', 'Major', 'Critical', 'Blocker'],
+    enum: ['None', 'Show Stopper', 'Critical', 'Major', 'Minor'],
     default: 'None'
   },
   classification: {
     type: String,
-    enum: ['Functional Bug', 'UI Bug', 'Performance', 'Security', 'Other'],
-    default: 'Functional Bug'
+    enum: [
+      'None',
+      'Security',
+      'Crash/Hang',
+      'Data loss',
+      'Performance',
+      'UI/Usability',
+      'Other bug',
+      'Feature(New)',
+      'Enhancement',
+      'Functional Bug',
+      'Technical Bug',
+      'Requirement Not Covered',
+      'Requirement Not Clear',
+      'Integrating Issue'
+    ],
+    default: 'None'
   },
   module: {
     type: String,
@@ -63,17 +95,51 @@ const BugSchema = new mongoose.Schema({
   },
   reproducible: {
     type: String,
-    enum: ['Always', 'Sometimes', 'Rarely', 'Unable'],
-    default: 'Always'
+    enum: ['None', 'Always', 'Sometimes', 'Rarely', 'Not Applicable'],
+    default: 'None'
+  },
+  flag: {
+    type: String,
+    enum: ['Internal', 'External'],
+    default: 'Internal'
   },
   due_date: {
+    type: Date
+  },
+  last_closed_time: {
     type: Date
   },
   tags: [{
     type: String,
     trim: true
   }],
+  linked_bugs: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Bug'
+  }],
+  associated_tasks: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Task'
+  }],
+  release_milestone: {
+    type: String,
+    trim: true
+  },
+  affected_milestone: {
+    type: String,
+    trim: true
+  },
+  completion_percentage: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
   created_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  last_modified_by: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -98,10 +164,21 @@ BugSchema.index({ company_id: 1 });
 BugSchema.index({ bug_id: 1 });
 BugSchema.index({ due_date: 1 });
 BugSchema.index({ created_at: -1 });
+BugSchema.index({ classification: 1 });
+BugSchema.index({ flag: 1 });
+BugSchema.index({ tags: 1 });
 
 // Update timestamp on save
 BugSchema.pre('save', function(next) {
   this.updated_at = new Date();
+  next();
+});
+
+// Track last closed time
+BugSchema.pre('save', function(next) {
+  if (this.isModified('status') && this.status === 'Closed') {
+    this.last_closed_time = new Date();
+  }
   next();
 });
 
@@ -120,7 +197,20 @@ BugSchema.pre('save', async function(next) {
 
 // Static method to get bugs grouped by status for kanban
 BugSchema.statics.getKanbanData = async function(query) {
-  const statuses = ['Open', 'In Progress', 'Testing', 'Moved to UAT', 'Ready for Production', 'Closed', 'Reopen'];
+  const statuses = [
+    'Open',
+    'In progress',
+    'Unit Testing',
+    'Moved to Testing',
+    'Testing in Progress',
+    'Ready for UAT',
+    'Ready for Production',
+    'Pending Customer Response',
+    'Pending Int. Resp',
+    'After Production',
+    'On Hold',
+    'Closed'
+  ];
   const result = {};
   
   for (const status of statuses) {
@@ -136,13 +226,18 @@ BugSchema.statics.getKanbanData = async function(query) {
 
 // Valid status transitions
 BugSchema.statics.validStatusTransitions = {
-  'Open': ['In Progress', 'Closed'],
-  'In Progress': ['Testing', 'Open', 'Closed'],
-  'Testing': ['Moved to UAT', 'In Progress', 'Closed'],
-  'Moved to UAT': ['Ready for Production', 'Testing', 'Closed'],
-  'Ready for Production': ['Closed', 'Moved to UAT'],
-  'Closed': ['Reopen'],
-  'Reopen': ['In Progress', 'Closed']
+  'Open': ['In progress', 'Closed', 'On Hold'],
+  'In progress': ['Unit Testing', 'Moved to Testing', 'Open', 'Closed', 'On Hold'],
+  'Unit Testing': ['Moved to Testing', 'In progress', 'Closed', 'On Hold'],
+  'Moved to Testing': ['Testing in Progress', 'In progress', 'Closed', 'On Hold'],
+  'Testing in Progress': ['Ready for UAT', 'In progress', 'Closed', 'On Hold'],
+  'Ready for UAT': ['Ready for Production', 'Testing in Progress', 'Closed', 'On Hold'],
+  'Ready for Production': ['After Production', 'Closed', 'On Hold'],
+  'Pending Customer Response': ['In progress', 'Closed', 'On Hold'],
+  'Pending Int. Resp': ['In progress', 'Closed', 'On Hold'],
+  'After Production': ['Closed', 'In progress'],
+  'On Hold': ['Open', 'In progress', 'Closed'],
+  'Closed': ['Open']
 };
 
 module.exports = mongoose.model('Bug', BugSchema);

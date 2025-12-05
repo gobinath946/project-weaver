@@ -7,7 +7,10 @@ const {
   updateBug,
   deleteBug,
   getBugsByProject,
-  getBugsKanban
+  getBugsKanban,
+  getBugsGrouped,
+  linkBug,
+  associateTask
 } = require('../controllers/bug.controller');
 const { protect } = require('../middleware/auth');
 
@@ -31,6 +34,9 @@ router.use(protect);
 
 // @route   GET /api/bugs/kanban
 router.get('/kanban', getBugsKanban);
+
+// @route   GET /api/bugs/grouped
+router.get('/grouped', getBugsGrouped);
 
 // @route   GET /api/bugs
 router.get('/', getBugs);
@@ -62,5 +68,11 @@ router.delete('/:id', deleteBug);
 
 // @route   GET /api/projects/:projectId/bugs
 router.get('/projects/:projectId/bugs', getBugsByProject);
+
+// @route   POST /api/bugs/:id/link - Link bugs together
+router.post('/:id/link', linkBug);
+
+// @route   POST /api/bugs/:id/associate-task - Associate task with bug
+router.post('/:id/associate-task', associateTask);
 
 module.exports = router;

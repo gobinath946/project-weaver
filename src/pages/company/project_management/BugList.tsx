@@ -1,171 +1,411 @@
-import { useState } from "react";
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { projectServices } from "@/api/services";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { ViewToggle, ViewMode } from "@/components/project-management/ViewToggle";
-import { StatusBadge } from "@/components/project-management/StatusBadge";
-import { SeverityBadge } from "@/components/project-management/PriorityBadge";
-import KanbanBoard from "@/components/project-management/KanbanBoard";
+import BugListView from "@/components/project-management/BugListView";
+import BugKanbanView from "@/components/project-management/BugKanbanView";
 import BugDialog from "@/components/project-management/BugDialog";
+import BugFilterSheet, { BugFilters } from "@/components/project-management/BugFilterSheet";
+import BugDetailModal from "@/components/project-management/BugDetailModal";
+import { BUG_GROUP_BY_OPTIONS } from "@/constants/bugConstants";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
-import { Plus, Search, MoreVertical, Edit, Trash2, Bug } from "lucide-react";
+import { Plus, Filter, Bug, ChevronDown, LayoutList, List, LayoutGrid } from "lucide-react";
+
+type ViewMode = "list" | "kanban";
 
 const BugList = () => {
   const [view, setView] = useState<ViewMode>("list");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [projectFilter, setProjectFilter] = useState<string>("all");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [groupBy, setGroupBy] = useState<'project' | 'none'>('none');
+  const [filters, setFilters] = useState<BugFilters>({ filter_mode: 'all' });
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
   const [selectedBug, setSelectedBug] = useState<any>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedBugId, setSelectedBugId] = useState<string | null>(null);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [paginationEnabled, setPaginationEnabled] = useState(true);
+  const [goToPage, setGoToPage] = useState("");
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: projectsData } = useQuery({
-    queryKey: ["projects-list"],
-    queryFn: async () => { const r = await projectServices.getProjects({ limit: 100 }); return r.data.data; },
-  });
+  // Build query params from filters
+  const buildQueryParams = useCallback(() => {
+    const params: any = {
+      page: paginationEnabled ? page : 1,
+      limit: paginationEnabled ? rowsPerPage : 1000,
+    };
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useInfiniteQuery({
-    queryKey: ["bugs", search, statusFilter, projectFilter],
-    queryFn: async ({ pageParam = 1 }) => {
-      const params: any = { page: pageParam, limit: 20 };
-      if (search) params.search = search;
-      if (statusFilter !== "all") params.status = statusFilter;
-      if (projectFilter !== "all") params.project_id = projectFilter;
-      return (await projectServices.getBugs(params)).data;
-    },
-    getNextPageParam: (lastPage) => lastPage.pagination.has_more ? lastPage.pagination.current_page + 1 : undefined,
-    initialPageParam: 1,
-    enabled: view === "list",
-  });
+    if (filters.search) params.search = filters.search;
+    if (filters.status) params.status = filters.status;
+    if (filters.severity) params.severity = filters.severity;
+    if (filters.project_id) params.project_id = filters.project_id;
+    if (filters.project_group) params.project_group = filters.project_group;
+    if (filters.assignee) params.assignee = filters.assignee;
+    if (filters.reporter) params.reporter = filters.reporter;
+    if (filters.classification) params.classification = filters.classification;
+    if (filters.flag) params.flag = filters.flag;
+    if (filters.tags) params.tags = filters.tags;
 
-  const { data: kanbanData, isLoading: kanbanLoading } = useQuery({
-    queryKey: ["bugs-kanban", projectFilter],
+    return params;
+  }, [page, rowsPerPage, paginationEnabled, filters]);
+
+  // Fetch bugs for list view
+  const {
+    data: bugsData,
+    isLoading: bugsLoading,
+    refetch: refetchBugs,
+  } = useQuery({
+    queryKey: ["bugs", filters, groupBy, page, rowsPerPage, paginationEnabled],
     queryFn: async () => {
-      const params: any = {};
-      if (projectFilter !== "all") params.project_id = projectFilter;
-      return (await projectServices.getBugsKanban(params)).data.data;
+      const params = buildQueryParams();
+      if (groupBy !== 'none') {
+        params.group_by = groupBy;
+        const response = await projectServices.getBugsGrouped(params);
+        return response.data;
+      }
+      const response = await projectServices.getBugs(params);
+      return response.data;
     },
-    enabled: view === "kanban",
+    enabled: view === "list",
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => projectServices.deleteBug(id),
-    onSuccess: () => { toast({ title: "Bug deleted" }); queryClient.invalidateQueries({ queryKey: ["bugs"] }); },
-    onError: () => { toast({ title: "Failed to delete bug", variant: "destructive" }); },
+    onSuccess: () => {
+      toast({ title: "Bug deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["bugs"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete bug", variant: "destructive" });
+    },
   });
 
-  const { loadMoreRef } = useInfiniteScroll({ hasMore: !!hasNextPage, isLoading: isFetchingNextPage, onLoadMore: fetchNextPage });
-  const bugs = data?.pages.flatMap((p) => p.data) || [];
+  // Process bugs data
+  const bugs = groupBy === 'none' ? bugsData?.data || [] : [];
+  const groupedBugs = groupBy !== 'none' ? bugsData?.data : undefined;
+  const pagination = bugsData?.pagination || { total_count: 0, total_pages: 1, current_page: 1 };
 
-  const kanbanColumns = kanbanData ? [
-    { id: "open", title: "Open", items: kanbanData["Open"] || [], color: "red" },
-    { id: "in-progress", title: "In Progress", items: kanbanData["In Progress"] || [], color: "blue" },
-    { id: "testing", title: "Testing", items: kanbanData["Testing"] || [], color: "yellow" },
-    { id: "uat", title: "Moved to UAT", items: kanbanData["Moved to UAT"] || [], color: "purple" },
-    { id: "ready", title: "Ready for Production", items: kanbanData["Ready for Production"] || [], color: "cyan" },
-    { id: "closed", title: "Closed", items: kanbanData["Closed"] || [], color: "green" },
-  ] : [];
+  const handleEdit = (bug: any) => {
+    setSelectedBug(bug);
+    setBugDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this bug?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleView = (bug: any) => {
+    setSelectedBugId(bug._id);
+    setDetailModalOpen(true);
+  };
+
+  const handleApplyFilters = (newFilters: BugFilters) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleGoToPage = () => {
+    const pageNum = parseInt(goToPage);
+    if (pageNum >= 1 && pageNum <= pagination.total_pages) {
+      setPage(pageNum);
+      setGoToPage("");
+    }
+  };
+
+  const activeFilterCount = Object.entries(filters).filter(
+    ([key, value]) => key !== 'filter_mode' && value && value !== ''
+  ).length;
 
   return (
     <DashboardLayout title="Bugs">
       <div className="h-full flex flex-col">
+        {/* Header Actions */}
         <div className="glass-card border-b border-border/30 p-3 sm:p-4 flex-shrink-0 rounded-t-xl flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="flex flex-1 gap-2 flex-wrap">
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search bugs..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-            </div>
-            <Select value={projectFilter} onValueChange={setProjectFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="All Projects" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                {projectsData?.map((p: any) => <SelectItem key={p._id} value={p._id}>{p.title}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Open">Open</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Testing">Testing</SelectItem>
-                <SelectItem value="Closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2">
+            {/* Group By Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LayoutList className="h-4 w-4" />
+                  Group By: {BUG_GROUP_BY_OPTIONS.find(o => o.value === groupBy)?.label || 'None'}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {BUG_GROUP_BY_OPTIONS.map((option) => (
+                  <DropdownMenuItem key={option.value} onClick={() => setGroupBy(option.value as any)}>
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="flex gap-2">
-            <ViewToggle view={view} onViewChange={setView} />
-            <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />New Bug</Button>
+
+          <div className="flex items-center gap-2">
+            {/* View Toggle */}
+            <div className="flex items-center border rounded-md">
+              <Button
+                variant={view === "list" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-8 px-3 rounded-r-none"
+                onClick={() => setView("list")}
+              >
+                <List className="h-4 w-4 mr-1" />
+                List
+              </Button>
+              <Button
+                variant={view === "kanban" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-8 px-3 rounded-l-none"
+                onClick={() => setView("kanban")}
+              >
+                <LayoutGrid className="h-4 w-4 mr-1" />
+                Kanban
+              </Button>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilterSheetOpen(true)}
+              className="h-8 relative"
+            >
+              <Filter className="h-4 w-4 mr-1" />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+
+            <Button size="sm" className="h-8" onClick={() => setBugDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Submit Bug
+            </Button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden bg-card/50 backdrop-blur-sm rounded-b-xl p-4">
-        {view === "list" ? (
-          isLoading ? <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div> : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Bug</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Reporter</TableHead>
-                    <TableHead>Assignee</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Severity</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bugs.map((bug: any) => (
-                    <TableRow key={bug._id}>
-                      <TableCell><div><p className="font-medium">{bug.title}</p><p className="text-xs text-muted-foreground">{bug.bug_id}</p></div></TableCell>
-                      <TableCell><span className="text-sm">{bug.project_id?.title}</span></TableCell>
-                      <TableCell>{bug.reporter && <span className="text-sm">{bug.reporter.first_name}</span>}</TableCell>
-                      <TableCell>{bug.assignee && <span className="text-sm">{bug.assignee.first_name}</span>}</TableCell>
-                      <TableCell><StatusBadge status={bug.status} /></TableCell>
-                      <TableCell><SeverityBadge severity={bug.severity} /></TableCell>
-                      <TableCell>{bug.due_date && <span className="text-sm text-muted-foreground">{format(new Date(bug.due_date), "MMM d, yyyy")}</span>}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setSelectedBug(bug); setDialogOpen(true); }}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => confirm("Delete?") && deleteMutation.mutate(bug._id)} className="text-destructive"><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )
-        ) : kanbanLoading ? <div className="flex gap-4">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-96 w-80" />)}</div> : (
-          <KanbanBoard columns={kanbanColumns} type="bug" onItemClick={(b) => { setSelectedBug(b); setDialogOpen(true); }} />
-        )}
+        {/* Content */}
+        <div className="flex-1 overflow-hidden bg-card/50 backdrop-blur-sm">
+          {view === "list" ? (
+            bugsLoading ? (
+              <div className="space-y-2 p-4">
+                {[...Array(10)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : (
+              <BugListView
+                bugs={bugs}
+                groupedBugs={groupedBugs}
+                isLoading={bugsLoading}
+                groupBy={groupBy}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+              />
+            )
+          ) : (
+            <BugKanbanView
+              onBugClick={handleView}
+              projectFilter={filters.project_id}
+            />
+          )}
 
-        {view === "list" && <div ref={loadMoreRef} className="h-10 flex items-center justify-center">{isFetchingNextPage && <span className="text-sm text-muted-foreground">Loading...</span>}</div>}
-        
-        {!isLoading && bugs.length === 0 && view === "list" && (
-          <div className="text-center py-12">
-            <Bug className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No bugs found</h3>
-            <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Report Bug</Button>
+          {!bugsLoading && bugs.length === 0 && !groupedBugs && view === "list" && (
+            <div className="text-center py-12">
+              <Bug className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No bugs found</h3>
+              <p className="text-muted-foreground mb-4">Submit your first bug to get started</p>
+              <Button onClick={() => setBugDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Submit Bug
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Footer - Pagination */}
+        {view === "list" && groupBy === 'none' && (
+          <div className="glass-card border-t border-border/30 py-3 px-3 sm:px-4 flex-shrink-0 rounded-b-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Left - Pagination Toggle & Rows */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="pagination"
+                  checked={paginationEnabled}
+                  onCheckedChange={(checked) => {
+                    setPaginationEnabled(checked as boolean);
+                    setPage(1);
+                  }}
+                />
+                <Label htmlFor="pagination" className="text-sm cursor-pointer">
+                  Pagination
+                </Label>
+              </div>
+
+              {paginationEnabled && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground">Rows:</Label>
+                  <Select
+                    value={rowsPerPage.toString()}
+                    onValueChange={(v) => {
+                      setRowsPerPage(parseInt(v));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {/* Center - Pagination */}
+            {paginationEnabled && pagination.total_pages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => page > 1 && setPage(page - 1)}
+                      className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {[...Array(Math.min(5, pagination.total_pages))].map((_, i) => {
+                    let pageNum;
+                    if (pagination.total_pages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= pagination.total_pages - 2) {
+                      pageNum = pagination.total_pages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => setPage(pageNum)}
+                          isActive={page === pageNum}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => page < pagination.total_pages && setPage(page + 1)}
+                      className={page >= pagination.total_pages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
+            {/* Right - Go to & Total */}
+            <div className="flex items-center gap-4">
+              {paginationEnabled && pagination.total_pages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground">Go to:</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={pagination.total_pages}
+                    value={goToPage}
+                    onChange={(e) => setGoToPage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleGoToPage()}
+                    className="h-8 w-16"
+                    placeholder={page.toString()}
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Total Count:</span>
+                <Badge variant="outline">{pagination.total_count}</Badge>
+              </div>
+            </div>
           </div>
         )}
-        </div>
       </div>
-      <BugDialog open={dialogOpen} onClose={() => { setDialogOpen(false); setSelectedBug(null); }} bug={selectedBug} onSuccess={() => { setDialogOpen(false); setSelectedBug(null); refetch(); queryClient.invalidateQueries({ queryKey: ["bugs-kanban"] }); }} />
+
+      {/* Dialogs */}
+      <BugDialog
+        open={bugDialogOpen}
+        onClose={() => {
+          setBugDialogOpen(false);
+          setSelectedBug(null);
+        }}
+        bug={selectedBug}
+        onSuccess={() => {
+          setBugDialogOpen(false);
+          setSelectedBug(null);
+          refetchBugs();
+          queryClient.invalidateQueries({ queryKey: ["bugs-kanban"] });
+        }}
+      />
+
+      <BugFilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+      />
+
+      <BugDetailModal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setSelectedBugId(null);
+        }}
+        bugId={selectedBugId}
+      />
     </DashboardLayout>
   );
 };
