@@ -24,7 +24,7 @@ import { Plus, Filter, ListCheck, ChevronDown, ListPlus, LayoutList } from "luci
 
 const TaskList = () => {
   const [view, setView] = useState<ViewMode>("list");
-  const [groupBy, setGroupBy] = useState<'task_list' | 'project' | 'none'>('task_list');
+  const [groupBy, setGroupBy] = useState<'task_list' | 'project' | 'none'>('none');
   const [filters, setFilters] = useState<TaskFilters>({ filter_mode: 'all' });
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
