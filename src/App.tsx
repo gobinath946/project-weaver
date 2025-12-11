@@ -40,6 +40,8 @@ import BugList from "./pages/company/project_management/BugList";
 import TimeLogList from "./pages/company/project_management/TimeLogList";
 import ProjectDashboard from "./pages/company/project_management/ProjectDashboard";
 import PMDashboard from "./pages/company/project_management/Dashboard";
+import ProjectOverview from "./pages/company/project_management/ProjectOverview";
+import MyProjectDetail from "./pages/company/project_management/MyProjectDetail";
 
 const queryClient = new QueryClient();
 
@@ -168,6 +170,16 @@ const App = () => {
       <Route path="/company/project/:id/dashboard" element={
         <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
           <ProjectDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/project_overview" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectOverview />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/my-projects/:id" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <MyProjectDetail />
         </ProtectedRoute>
       } />
 

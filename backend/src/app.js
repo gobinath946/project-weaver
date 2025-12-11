@@ -24,6 +24,7 @@ const taskRoutes = require("./routes/task.routes");
 const bugRoutes = require("./routes/bug.routes");
 const timeLogRoutes = require("./routes/timeLog.routes");
 const projectDashboardRoutes = require("./routes/projectDashboard.routes");
+const projectOverviewRoutes = require("./routes/projectOverview.routes");
 
 
 const errorHandler = require("./middleware/error");
@@ -117,6 +118,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/bugs", bugRoutes);
 app.use("/api/timelogs", timeLogRoutes);
 app.use("/api/project-dashboard", projectDashboardRoutes);
+app.use("/api/project-overview", projectOverviewRoutes);
 
 
 app.get("/api/health", async (req, res) => {

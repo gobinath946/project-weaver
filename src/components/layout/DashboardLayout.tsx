@@ -31,8 +31,9 @@ import {
   ListCheck,
   Bug,
   Timer,
+  Eye,
 } from "lucide-react";
-import { authServices } from "@/api/services";
+import { authServices, projectServices } from "@/api/services";
 import { Badge } from "../ui/badge";
 import { Link, useLocation } from "react-router-dom";
 import SubscriptionModal from "@/components/subscription/SubscriptionModal";
@@ -193,6 +194,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     if (user?.role === "company_super_admin") {
       return [
         { icon: Home, label: "Dashboard", path: "/company/dashboard", module: "project_dashboard" },
+        { icon: Eye, label: "Project Overview", path: "/company/project_overview", module: "project_management" },
         { icon: Users, label: "Users", path: "/company/users", module: "project_user" },
         { icon: Shield, label: "Permission", path: "/company/permissions", module: "project_permission" },
         { icon: Database, label: "Dropdown Master", path: "/company/dropdown-master", module: "dropdown_master" },
@@ -213,6 +215,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     return [
       { icon: BarChart3, label: "Dashboard", path: "/company/dashboard", module: "project_dashboard" },
+      { icon: Eye, label: "Project Overview", path: "/company/project_overview", module: "project_management" },
       {
         icon: ClipboardList,
         label: "Project Management",

@@ -47,7 +47,7 @@ const CompanyUsers = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [paginationEnabled, setPaginationEnabled] = useState(true);
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -664,7 +664,7 @@ const CompanyUsers = () => {
         title="Team Members"
         data={sortedUsers}
         isLoading={isLoading}
-        totalCount={usersResponse?.total || 0}
+        totalCount={usersResponse?.pagination?.total_records || usersResponse?.total || 0}
         statChips={statChips}
         actionButtons={actionButtons}
         page={page}

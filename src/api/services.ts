@@ -385,6 +385,13 @@ export const projectServices = {
   getMyTasks: (params?: any) => apiClient.get("/api/project-dashboard/my-tasks", { params }),
   getDueToday: () => apiClient.get("/api/project-dashboard/due-today"),
   getOverdueItems: () => apiClient.get("/api/project-dashboard/overdue"),
+
+  // Project Overview (User-specific)
+  getUserProjects: () => apiClient.get("/api/project-overview/user-projects"),
+  getUserTasks: (params?: any) => apiClient.get("/api/project-overview/user-tasks", { params }),
+  getUserBugs: (params?: any) => apiClient.get("/api/project-overview/user-bugs", { params }),
+  getUserStats: () => apiClient.get("/api/project-overview/user-stats"),
+  getProjectOverview: (id: string) => apiClient.get(`/api/project-overview/project/${id}`),
 };
 
 export const logServices = {
