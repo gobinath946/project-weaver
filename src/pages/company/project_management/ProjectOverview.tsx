@@ -107,18 +107,20 @@ const ProjectOverview = () => {
             [...Array(5)].map((_, i) => <Skeleton key={i} className="h-24" />)
           ) : (
             statCards.map((stat, i) => (
-              <Card key={i}>
+              <Card key={i} className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-full ${stat.bg} flex items-center justify-center`}>
-                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                    <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}>
+                      <stat.icon className={`h-6 w-6 ${stat.color} transition-all duration-200`} />
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">{stat.title}</p>
-                      <p className="text-2xl font-bold">{stat.value}</p>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
+                      <p className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-200">{stat.value}</p>
                     </div>
                   </div>
                 </CardContent>
+                {/* Subtle hover glow */}
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </Card>
             ))
           )}
@@ -126,43 +128,55 @@ const ProjectOverview = () => {
 
         {/* Completion Rates */}
         {!statsLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10 hover:-translate-y-0.5">
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <TrendingUp className="h-5 w-5 text-green-500" />
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
+                      <TrendingUp className="h-7 w-7 text-green-500" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Task Completion Rate</p>
-                      <p className="text-2xl font-bold">{stats?.task_completion_rate || 0}%</p>
+                      <p className="text-sm text-muted-foreground font-medium">Task Completion Rate</p>
+                      <p className="text-3xl font-bold text-green-600 dark:text-green-400 group-hover:text-green-500 transition-colors duration-200">
+                        {stats?.task_completion_rate || 0}%
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    {stats?.completed_tasks || 0} / {stats?.total_tasks || 0}
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground mb-1">Progress</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {stats?.completed_tasks || 0} / {stats?.total_tasks || 0}
+                    </p>
                   </div>
                 </div>
               </CardContent>
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-green-500/0 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
+            <Card className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-0.5">
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                      <TrendingUp className="h-5 w-5 text-emerald-500" />
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
+                      <TrendingUp className="h-7 w-7 text-emerald-500" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Bug Resolution Rate</p>
-                      <p className="text-2xl font-bold">{stats?.bug_resolution_rate || 0}%</p>
+                      <p className="text-sm text-muted-foreground font-medium">Bug Resolution Rate</p>
+                      <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 transition-colors duration-200">
+                        {stats?.bug_resolution_rate || 0}%
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    {stats?.closed_bugs || 0} / {stats?.total_bugs || 0}
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground mb-1">Progress</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {stats?.closed_bugs || 0} / {stats?.total_bugs || 0}
+                    </p>
                   </div>
                 </div>
               </CardContent>
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
             </Card>
           </div>
         )}
@@ -181,43 +195,87 @@ const ProjectOverview = () => {
             ) : projects?.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No projects assigned</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects?.map((project: any) => (
                   <div
                     key={project._id}
-                    className="p-4 rounded-lg border transition-all cursor-pointer hover:border-primary hover:bg-primary/5 hover:shadow-md"
+                    className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 cursor-pointer hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
                     onClick={() => navigate(`/company/my-projects/${project._id}`)}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{project.title}</h3>
-                        <p className="text-xs text-muted-foreground">{project.project_id}</p>
+                    {/* Card Content */}
+                    <div className="p-5">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors duration-200 leading-tight">
+                            {project.title || 'Untitled Project'}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1 font-mono">
+                            {project.project_id}
+                          </p>
+                        </div>
+                        <div className="ml-3 flex-shrink-0">
+                          <StatusBadge status={project.status} />
+                        </div>
                       </div>
-                      <StatusBadge status={project.status} />
-                    </div>
-                    {project.project_group && (
-                      <Badge 
-                        variant="outline" 
-                        className="mb-2"
-                        style={{ borderColor: project.project_group.color }}
-                      >
-                        {project.project_group.name}
-                      </Badge>
-                    )}
-                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                      <div className="flex items-center gap-1">
-                        <ListCheck className="h-3 w-3 text-blue-500" />
-                        <span>{project.user_stats?.completed_tasks || 0}/{project.user_stats?.total_tasks || 0} Tasks</span>
+
+                      {/* Project Group Badge */}
+                      {project.project_group && (
+                        <div className="mb-4">
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs px-2 py-1 border-2 font-medium"
+                            style={{ 
+                              borderColor: project.project_group.color,
+                              color: project.project_group.color,
+                              backgroundColor: `${project.project_group.color}10`
+                            }}
+                          >
+                            {project.project_group.name}
+                          </Badge>
+                        </div>
+                      )}
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                          <div className="flex-shrink-0">
+                            <ListCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-blue-900 dark:text-blue-100">Tasks</p>
+                            <p className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                              {(project.user_stats?.completed_tasks ?? 0)}/{(project.user_stats?.total_tasks ?? 0)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
+                          <div className="flex-shrink-0">
+                            <Bug className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-red-900 dark:text-red-100">Bugs</p>
+                            <p className="text-sm font-bold text-red-700 dark:text-red-300">
+                              {(project.user_stats?.closed_bugs ?? 0)}/{(project.user_stats?.total_bugs ?? 0)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Bug className="h-3 w-3 text-red-500" />
-                        <span>{project.user_stats?.closed_bugs || 0}/{project.user_stats?.total_bugs || 0} Bugs</span>
+                    </div>
+
+                    {/* Footer with Blue Background */}
+                    <div className="relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800"></div>
+                      <div className="relative flex items-center justify-between px-5 py-3 text-white">
+                        <span className="text-sm font-medium">Click to view details</span>
+                        <ArrowRight className="h-4 w-4 text-white transition-transform duration-200 group-hover:translate-x-1" />
                       </div>
+                      {/* Animated gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <span className="text-xs text-muted-foreground">Click to view details</span>
-                      <ArrowRight className="h-4 w-4 text-primary" />
-                    </div>
+
+                    {/* Hover glow effect */}
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                 ))}
               </div>
@@ -263,20 +321,20 @@ const ProjectOverview = () => {
                 ) : (
                   <div className="space-y-2">
                     {tasks?.map((task: any) => (
-                      <div key={task._id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{task.name}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs text-muted-foreground">{task.project_id?.title}</p>
+                      <div key={task._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="font-medium text-foreground mb-1 leading-tight">{task.name}</p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>{task.project_id?.title}</span>
                             {task.due_date && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {format(new Date(task.due_date), "MMM dd, yyyy")}
                               </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 ml-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <PriorityBadge priority={task.priority} />
                           <StatusBadge status={task.status} />
                         </div>
@@ -313,20 +371,20 @@ const ProjectOverview = () => {
                 ) : (
                   <div className="space-y-2">
                     {bugs?.map((bug: any) => (
-                      <div key={bug._id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{bug.title}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs text-muted-foreground">{bug.project_id?.title}</p>
+                      <div key={bug._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="font-medium text-foreground mb-1 leading-tight">{bug.title}</p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>{bug.project_id?.title}</span>
                             {bug.due_date && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {format(new Date(bug.due_date), "MMM dd, yyyy")}
                               </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 ml-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge variant={bug.severity === "Critical" ? "destructive" : "outline"}>
                             {bug.severity}
                           </Badge>

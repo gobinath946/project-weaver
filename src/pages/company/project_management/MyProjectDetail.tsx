@@ -251,20 +251,25 @@ const MyProjectDetail = () => {
                 ) : (
                   <div className="space-y-2">
                     {overview.user_tasks.map((task: any) => (
-                      <div key={task._id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{task.name}</p>
+                      <div key={task._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="font-medium text-foreground mb-1 leading-tight">{task.name}</p>
                           {task.description && (
-                            <p className="text-sm text-muted-foreground truncate">{task.description}</p>
+                            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{task.description}</p>
                           )}
-                          {task.due_date && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                              <Clock className="h-3 w-3" />
-                              Due: {formatDate(task.due_date)}
-                            </div>
-                          )}
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            {task.assignee && (
+                              <span>Assigned to: {task.assignee.first_name} {task.assignee.last_name}</span>
+                            )}
+                            {task.due_date && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Due: {formatDate(task.due_date)}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 ml-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <PriorityBadge priority={task.priority} />
                           <StatusBadge status={task.status} />
                         </div>
@@ -288,20 +293,25 @@ const MyProjectDetail = () => {
                 ) : (
                   <div className="space-y-2">
                     {overview.user_bugs.map((bug: any) => (
-                      <div key={bug._id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{bug.title}</p>
+                      <div key={bug._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="font-medium text-foreground mb-1 leading-tight">{bug.title}</p>
                           {bug.description && (
-                            <p className="text-sm text-muted-foreground truncate">{bug.description}</p>
+                            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{bug.description}</p>
                           )}
-                          {bug.due_date && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                              <Clock className="h-3 w-3" />
-                              Due: {formatDate(bug.due_date)}
-                            </div>
-                          )}
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            {bug.assignee && (
+                              <span>Assigned to: {bug.assignee.first_name} {bug.assignee.last_name}</span>
+                            )}
+                            {bug.due_date && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Due: {formatDate(bug.due_date)}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 ml-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge variant={bug.severity === "Critical" ? "destructive" : "outline"}>
                             {bug.severity}
                           </Badge>
@@ -327,10 +337,15 @@ const MyProjectDetail = () => {
                 ) : (
                   <div className="space-y-2">
                     {overview.user_time_logs.map((log: any) => (
-                      <div key={log._id} className="flex items-center justify-between p-3 rounded-lg border">
-                        <div className="flex-1">
-                          <p className="font-medium">{log.description || "Time log entry"}</p>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                      <div key={log._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="font-medium text-foreground mb-1 leading-tight">
+                            {log.title || log.description || "Time log entry"}
+                          </p>
+                          {log.description && log.title && (
+                            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{log.description}</p>
+                          )}
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             {log.log_date && (
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
@@ -341,9 +356,12 @@ const MyProjectDetail = () => {
                               <Timer className="h-3 w-3" />
                               {log.hours || 0}h
                             </div>
+                            {log.task_id && (
+                              <span>Task: {log.task_id.name || 'N/A'}</span>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge variant={log.is_billable ? "default" : "outline"}>
                             {log.is_billable ? "Billable" : "Non-Billable"}
                           </Badge>
