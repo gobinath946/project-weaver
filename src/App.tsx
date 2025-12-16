@@ -42,6 +42,15 @@ import ProjectDashboard from "./pages/company/project_management/ProjectDashboar
 import PMDashboard from "./pages/company/project_management/Dashboard";
 import ProjectOverview from "./pages/company/project_management/ProjectOverview";
 import MyProjectDetail from "./pages/company/project_management/MyProjectDetail";
+import ProjectTaskList from "./pages/company/project_management/ProjectTaskList";
+import ProjectBugList from "./pages/company/project_management/ProjectBugList";
+import ProjectTimeLogList from "./pages/company/project_management/ProjectTimeLogList";
+
+// Project Overview Pages (Separate from Project Management)
+import ProjectOverviewDashboard from "./pages/project_overview/ProjectOverviewDashboard";
+import ProjectOverviewTasks from "./pages/project_overview/ProjectOverviewTasks";
+import ProjectOverviewBugs from "./pages/project_overview/ProjectOverviewBugs";
+import ProjectOverviewTimesheets from "./pages/project_overview/ProjectOverviewTimesheets";
 
 const queryClient = new QueryClient();
 
@@ -177,9 +186,55 @@ const App = () => {
           <ProjectOverview />
         </ProtectedRoute>
       } />
+      
+      {/* Project Overview Dynamic Routes */}
+      <Route path="/company/project-overview/:projectId/dashboard" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <MyProjectDetail />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/project-overview/:projectId/tasks" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectTaskList />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/project-overview/:projectId/bugs" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectBugList />
+        </ProtectedRoute>
+      } />
+      <Route path="/company/project-overview/:projectId/timesheets" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectTimeLogList />
+        </ProtectedRoute>
+      } />
+      
+      {/* Legacy route for backward compatibility */}
       <Route path="/company/my-projects/:id" element={
         <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
           <MyProjectDetail />
+        </ProtectedRoute>
+      } />
+
+      {/* Project Overview Routes (Separate from Project Management) */}
+      <Route path="/project-overview/:projectName/dashboard" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectOverviewDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/project-overview/:projectName/tasks" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectOverviewTasks />
+        </ProtectedRoute>
+      } />
+      <Route path="/project-overview/:projectName/bugs" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectOverviewBugs />
+        </ProtectedRoute>
+      } />
+      <Route path="/project-overview/:projectName/timesheets" element={
+        <ProtectedRoute allowedRoles={['company_super_admin', 'company_admin']} requiredModule="project_management">
+          <ProjectOverviewTimesheets />
         </ProtectedRoute>
       } />
 

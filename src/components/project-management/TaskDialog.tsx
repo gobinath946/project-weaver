@@ -44,9 +44,10 @@ interface TaskDialogProps {
   onClose: () => void;
   task?: any;
   onSuccess?: () => void;
+  defaultProjectId?: string;
 }
 
-const TaskDialog = ({ open, onClose, task, onSuccess }: TaskDialogProps) => {
+const TaskDialog = ({ open, onClose, task, onSuccess, defaultProjectId }: TaskDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEdit = !!task;
@@ -147,7 +148,7 @@ const TaskDialog = ({ open, onClose, task, onSuccess }: TaskDialogProps) => {
       setFormData({
         name: "",
         description: "",
-        project_id: "",
+        project_id: defaultProjectId || "",
         task_list_id: "",
         owners: [],
         current_owner: "",

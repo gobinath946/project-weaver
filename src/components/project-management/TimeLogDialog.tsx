@@ -19,9 +19,10 @@ interface TimeLogDialogProps {
   onClose: () => void;
   timeLog?: any;
   onSuccess?: () => void;
+  defaultProjectId?: string;
 }
 
-const TimeLogDialog = ({ open, onClose, timeLog, onSuccess }: TimeLogDialogProps) => {
+const TimeLogDialog = ({ open, onClose, timeLog, onSuccess, defaultProjectId }: TimeLogDialogProps) => {
   const { toast } = useToast();
   const isEdit = !!timeLog;
 
@@ -82,7 +83,7 @@ const TimeLogDialog = ({ open, onClose, timeLog, onSuccess }: TimeLogDialogProps
       });
     } else {
       setFormData({
-        title: "", project_id: "", task_id: "", bug_id: "",
+        title: "", project_id: defaultProjectId || "", task_id: "", bug_id: "",
         date: new Date(), daily_log_hours: "", start_time: "", end_time: "",
         billing_type: "Billable", notes: "",
       });

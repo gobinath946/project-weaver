@@ -52,9 +52,10 @@ interface BugDialogProps {
   onClose: () => void;
   bug?: any;
   onSuccess?: () => void;
+  defaultProjectId?: string;
 }
 
-const BugDialog = ({ open, onClose, bug, onSuccess }: BugDialogProps) => {
+const BugDialog = ({ open, onClose, bug, onSuccess, defaultProjectId }: BugDialogProps) => {
   const { toast } = useToast();
   const isEdit = !!bug;
 
@@ -120,7 +121,7 @@ const BugDialog = ({ open, onClose, bug, onSuccess }: BugDialogProps) => {
       setFormData({
         title: "",
         description: "",
-        project_id: "",
+        project_id: defaultProjectId || "",
         assignee: "",
         status: "Open",
         severity: "None",

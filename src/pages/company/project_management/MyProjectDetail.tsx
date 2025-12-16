@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/project-management/StatusBadge";
 import { PriorityBadge } from "@/components/project-management/PriorityBadge";
 import { projectServices } from "@/api/services";
@@ -24,16 +25,25 @@ import {
 } from "lucide-react";
 
 const MyProjectDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, projectId } = useParams<{ id?: string; projectId?: string }>();
   const navigate = useNavigate();
+  
+  // Use projectId if available (new route), otherwise use id (legacy route)
+  const currentProjectId = projectId || id;
 
-  const { data: overview, isLoading } = useQuery({
-    queryKey: ["project-overview", id],
+
+
+  const { data: overview, isLoading, error } = useQuery({
+    queryKey: ["project-overview", currentProjectId],
     queryFn: async () => {
-      const response = await projectServices.getProjectOverview(id!);
-      return response.data.data;
+      const response = await projectServices.getProjectOverview(currentProjectId!);
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch project');
+      }
     },
-    enabled: !!id,
+    enabled: !!currentProjectId,
   });
 
   // Helper function to safely format dates
@@ -48,7 +58,7 @@ const MyProjectDetail = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="My Project">
+      <DashboardLayout title="Loading Project...">
         <div className="space-y-6">
           <Skeleton className="h-32" />
           <div className="grid grid-cols-4 gap-4">
@@ -59,9 +69,38 @@ const MyProjectDetail = () => {
     );
   }
 
+  if (error || !overview || !overview.project) {
+    return (
+      <DashboardLayout title="Project Not Found">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Project Not Found</h2>
+            <p className="text-muted-foreground mb-4">
+              The requested project could not be found or you don't have access to it.
+            </p>
+            <Button onClick={() => navigate("/company/project_overview")}>
+              Back to Projects
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   const project = overview?.project;
   const taskBreakdown = overview?.task_breakdown || [];
   const bugBreakdown = overview?.bug_breakdown || [];
+
+  // Helper function to get project display title
+  const getProjectTitle = () => {
+    if (project?.title && project.title.trim()) {
+      return project.title.trim();
+    }
+    if (project?.project_id) {
+      return `Project ${project.project_id}`;
+    }
+    return 'Untitled Project';
+  };
 
   const totalTasks = taskBreakdown.reduce((sum: number, item: any) => sum + item.count, 0);
   const completedTasks = taskBreakdown.find((item: any) => item._id === "Completed")?.count || 0;
@@ -69,7 +108,7 @@ const MyProjectDetail = () => {
   const closedBugs = bugBreakdown.find((item: any) => item._id === "Closed")?.count || 0;
 
   return (
-    <DashboardLayout title={project?.title || "My Project"}>
+    <DashboardLayout title={getProjectTitle()}>
       <div className="space-y-6">
         {/* Back Button & Project Header */}
         <div className="flex items-start justify-between">
@@ -77,11 +116,15 @@ const MyProjectDetail = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/company/project_overview")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold">{project?.title}</h1>
-              <p className="text-sm text-muted-foreground">{project?.project_id}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-foreground leading-tight">
+                {getProjectTitle()}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1 font-mono">
+                ID: {project?.project_id || 'Not assigned'}
+              </p>
               {project?.description && (
-                <p className="text-muted-foreground mt-1">{project.description}</p>
+                <p className="text-muted-foreground mt-2 leading-relaxed">{project.description}</p>
               )}
             </div>
           </div>
@@ -96,7 +139,12 @@ const MyProjectDetail = () => {
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs text-muted-foreground">Owner</p>
-                  <p className="font-medium">{project?.owner?.first_name} {project?.owner?.last_name}</p>
+                  <p className="font-medium">
+                    {project?.owner?.first_name && project?.owner?.last_name 
+                      ? `${project.owner.first_name} ${project.owner.last_name}`
+                      : project?.owner?.email || 'Not assigned'
+                    }
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -124,25 +172,50 @@ const MyProjectDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Tabs */}
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 border-b">
+          <Button
+            variant={window.location.pathname.includes('/dashboard') ? "default" : "ghost"}
+            size="sm"
+            onClick={() => navigate(`/company/project-overview/${currentProjectId}/dashboard`)}
+            className="flex items-center gap-2"
+          >
+            <TrendingUp className="h-4 w-4" />
+            Dashboard
+          </Button>
+          <Button
+            variant={window.location.pathname.includes('/tasks') ? "default" : "ghost"}
+            size="sm"
+            onClick={() => navigate(`/company/project-overview/${currentProjectId}/tasks`)}
+            className="flex items-center gap-2"
+          >
+            <ListCheck className="h-4 w-4" />
+            Tasks
+          </Button>
+          <Button
+            variant={window.location.pathname.includes('/bugs') ? "default" : "ghost"}
+            size="sm"
+            onClick={() => navigate(`/company/project-overview/${currentProjectId}/bugs`)}
+            className="flex items-center gap-2"
+          >
+            <Bug className="h-4 w-4" />
+            Bugs
+          </Button>
+          <Button
+            variant={window.location.pathname.includes('/timesheets') ? "default" : "ghost"}
+            size="sm"
+            onClick={() => navigate(`/company/project-overview/${currentProjectId}/timesheets`)}
+            className="flex items-center gap-2"
+          >
+            <Timer className="h-4 w-4" />
+            Time Logs
+          </Button>
+        </div>
+
+        {/* Dashboard Content - Only show on dashboard route */}
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="dashboard">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="tasks">
-              <ListCheck className="h-4 w-4 mr-2" />
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger value="bugs">
-              <Bug className="h-4 w-4 mr-2" />
-              Bugs
-            </TabsTrigger>
-            <TabsTrigger value="timelogs">
-              <Timer className="h-4 w-4 mr-2" />
-              Time Logs
-            </TabsTrigger>
+          <TabsList className="hidden">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           </TabsList>
 
           {/* Dashboard Tab */}
@@ -243,38 +316,66 @@ const MyProjectDetail = () => {
           <TabsContent value="tasks" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">My Tasks in This Project</CardTitle>
+                <CardTitle className="text-lg">
+                  My Tasks in {getProjectTitle()}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {!overview?.user_tasks || overview.user_tasks.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No tasks assigned to you in this project</p>
+                  <div className="text-center py-12">
+                    <ListCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No tasks assigned</h3>
+                    <p className="text-muted-foreground">No tasks are assigned to you in this project</p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
-                    {overview.user_tasks.map((task: any) => (
-                      <div key={task._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <p className="font-medium text-foreground mb-1 leading-tight">{task.name}</p>
-                          {task.description && (
-                            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{task.description}</p>
-                          )}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            {task.assignee && (
-                              <span>Assigned to: {task.assignee.first_name} {task.assignee.last_name}</span>
-                            )}
-                            {task.due_date && (
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                Due: {formatDate(task.due_date)}
+                  <div className="border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Task Name</TableHead>
+                          <TableHead>Task List</TableHead>
+                          <TableHead>Assignee</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead>Priority</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {overview.user_tasks.map((task: any) => (
+                          <TableRow key={task._id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{task.name}</p>
+                                <p className="text-xs text-muted-foreground">{task.task_id}</p>
                               </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <PriorityBadge priority={task.priority} />
-                          <StatusBadge status={task.status} />
-                        </div>
-                      </div>
-                    ))}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm">{task.task_list_id?.name || 'No List'}</span>
+                            </TableCell>
+                            <TableCell>
+                              {task.assignee ? (
+                                <span className="text-sm">{task.assignee.first_name} {task.assignee.last_name}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Unassigned</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {task.due_date ? (
+                                <span className="text-sm">{formatDate(task.due_date)}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">No due date</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <PriorityBadge priority={task.priority} />
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge status={task.status} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </CardContent>
@@ -285,40 +386,72 @@ const MyProjectDetail = () => {
           <TabsContent value="bugs" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">My Bugs in This Project</CardTitle>
+                <CardTitle className="text-lg">
+                  My Bugs in {getProjectTitle()}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {!overview?.user_bugs || overview.user_bugs.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No bugs assigned to you in this project</p>
+                  <div className="text-center py-12">
+                    <Bug className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No bugs assigned</h3>
+                    <p className="text-muted-foreground">No bugs are assigned to you in this project</p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
-                    {overview.user_bugs.map((bug: any) => (
-                      <div key={bug._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <p className="font-medium text-foreground mb-1 leading-tight">{bug.title}</p>
-                          {bug.description && (
-                            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{bug.description}</p>
-                          )}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            {bug.assignee && (
-                              <span>Assigned to: {bug.assignee.first_name} {bug.assignee.last_name}</span>
-                            )}
-                            {bug.due_date && (
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                Due: {formatDate(bug.due_date)}
+                  <div className="border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Bug Title</TableHead>
+                          <TableHead>Reporter</TableHead>
+                          <TableHead>Assignee</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead>Severity</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {overview.user_bugs.map((bug: any) => (
+                          <TableRow key={bug._id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{bug.title}</p>
+                                <p className="text-xs text-muted-foreground">{bug.bug_id}</p>
                               </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge variant={bug.severity === "Critical" ? "destructive" : "outline"}>
-                            {bug.severity}
-                          </Badge>
-                          <StatusBadge status={bug.status} />
-                        </div>
-                      </div>
-                    ))}
+                            </TableCell>
+                            <TableCell>
+                              {bug.reporter ? (
+                                <span className="text-sm">{bug.reporter.first_name} {bug.reporter.last_name}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Unknown</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {bug.assignee ? (
+                                <span className="text-sm">{bug.assignee.first_name} {bug.assignee.last_name}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Unassigned</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {bug.due_date ? (
+                                <span className="text-sm">{formatDate(bug.due_date)}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">No due date</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={bug.severity === "Critical" ? "destructive" : bug.severity === "High" ? "destructive" : "outline"}>
+                                {bug.severity}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge status={bug.status} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </CardContent>
@@ -329,48 +462,68 @@ const MyProjectDetail = () => {
           <TabsContent value="timelogs" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">My Time Logs in This Project</CardTitle>
+                <CardTitle className="text-lg">
+                  My Time Logs in {getProjectTitle()}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {!overview?.user_time_logs || overview.user_time_logs.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No time logs recorded in this project</p>
+                  <div className="text-center py-12">
+                    <Timer className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No time logs recorded</h3>
+                    <p className="text-muted-foreground">No time logs have been recorded for this project</p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
-                    {overview.user_time_logs.map((log: any) => (
-                      <div key={log._id} className="flex items-start justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <p className="font-medium text-foreground mb-1 leading-tight">
-                            {log.title || log.description || "Time log entry"}
-                          </p>
-                          {log.description && log.title && (
-                            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{log.description}</p>
-                          )}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            {log.log_date && (
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {formatDate(log.log_date)}
+                  <div className="border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Hours</TableHead>
+                          <TableHead>Task</TableHead>
+                          <TableHead>Billing Type</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {overview.user_time_logs.map((log: any) => (
+                          <TableRow key={log._id}>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{log.title || log.description || "Time log entry"}</p>
+                                <p className="text-xs text-muted-foreground">{log.log_id}</p>
                               </div>
-                            )}
-                            <div className="flex items-center gap-1">
-                              <Timer className="h-3 w-3" />
-                              {log.hours || 0}h
-                            </div>
-                            {log.task_id && (
-                              <span>Task: {log.task_id.name || 'N/A'}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge variant={log.is_billable ? "default" : "outline"}>
-                            {log.is_billable ? "Billable" : "Non-Billable"}
-                          </Badge>
-                          <Badge variant={log.status === "Approved" ? "default" : "secondary"}>
-                            {log.status || "Pending"}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
+                            </TableCell>
+                            <TableCell>
+                              {log.log_date ? (
+                                <span className="text-sm">{formatDate(log.log_date)}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">No date</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{log.hours || 0}h</Badge>
+                            </TableCell>
+                            <TableCell>
+                              {log.task_id ? (
+                                <span className="text-sm">{log.task_id.name}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">No task</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={log.is_billable ? "default" : "secondary"}>
+                                {log.is_billable ? "Billable" : "Non-Billable"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge status={log.approval_status || log.status || "Pending"} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </CardContent>

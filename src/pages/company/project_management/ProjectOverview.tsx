@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -196,11 +197,18 @@ const ProjectOverview = () => {
               <p className="text-muted-foreground text-center py-8">No projects assigned</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects?.map((project: any) => (
+                {projects?.map((project: any) => {
+                  // Create URL-friendly project name
+                  const projectUrlName = (project.title || project.project_id || 'untitled')
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '');
+                  
+                  return (
                   <div
                     key={project._id}
                     className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 cursor-pointer hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1"
-                    onClick={() => navigate(`/company/my-projects/${project._id}`)}
+                    onClick={() => navigate(`/project-overview/${projectUrlName}/dashboard`)}
                   >
                     {/* Card Content */}
                     <div className="p-5">
@@ -277,7 +285,8 @@ const ProjectOverview = () => {
                     {/* Hover glow effect */}
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

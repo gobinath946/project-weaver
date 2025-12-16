@@ -169,6 +169,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     },
   });
 
+  // Fetch user projects for sidebar
+  const { data: userProjects } = useQuery({
+    queryKey: ["sidebar-user-projects"],
+    queryFn: async () => {
+      const response = await projectServices.getUserProjects();
+      return response.data.data;
+    },
+    enabled: user?.role !== "master_admin",
+  });
+
 
   useEffect(() => {
     if (user?.subscription_modal_force && user?.role === "company_super_admin") {
@@ -194,7 +204,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     if (user?.role === "company_super_admin") {
       return [
         { icon: Home, label: "Dashboard", path: "/company/dashboard", module: "project_dashboard" },
-        { icon: Eye, label: "Project Overview", path: "/company/project_overview", module: "project_management" },
+        { 
+          icon: Eye, 
+          label: "Project Overview", 
+          module: "project_management",
+          children: userProjects?.map((project: any) => {
+            const projectUrlName = (project.title || project.project_id || 'untitled')
+              .toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace(/[^a-z0-9-]/g, '');
+            return {
+              icon: KanbanSquare,
+              label: project.title || `Project ${project.project_id}`,
+              path: `/project-overview/${projectUrlName}/dashboard`
+            };
+          }) || []
+        },
         { icon: Users, label: "Users", path: "/company/users", module: "project_user" },
         { icon: Shield, label: "Permission", path: "/company/permissions", module: "project_permission" },
         { icon: Database, label: "Dropdown Master", path: "/company/dropdown-master", module: "dropdown_master" },
@@ -215,7 +240,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     return [
       { icon: BarChart3, label: "Dashboard", path: "/company/dashboard", module: "project_dashboard" },
-      { icon: Eye, label: "Project Overview", path: "/company/project_overview", module: "project_management" },
+      { 
+        icon: Eye, 
+        label: "Project Overview", 
+        module: "project_management",
+        children: userProjects?.map((project: any) => {
+          const projectUrlName = (project.title || project.project_id || 'untitled')
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '');
+          return {
+            icon: KanbanSquare,
+            label: project.title || `Project ${project.project_id}`,
+            path: `/project-overview/${projectUrlName}/dashboard`
+          };
+        }) || []
+      },
       {
         icon: ClipboardList,
         label: "Project Management",
