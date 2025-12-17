@@ -53,12 +53,13 @@ const ProjectOverviewTimesheets = () => {
   });
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useInfiniteQuery({
-    queryKey: ["project-timelogs", currentProject?._id],
+    queryKey: ["user-project-timelogs", currentProject?._id],
     queryFn: async ({ pageParam = 1 }) => {
       const params: any = { 
         page: pageParam, 
         limit: 20,
-        project_id: currentProject?._id // Filter by project
+        project_id: currentProject?._id, // Filter by project
+        user_specific: true // Only fetch time logs for current user
       };
       return (await projectServices.getTimeLogs(params)).data;
     },
@@ -69,19 +70,19 @@ const ProjectOverviewTimesheets = () => {
 
   const approveMutation = useMutation({
     mutationFn: (id: string) => projectServices.approveTimeLog(id),
-    onSuccess: () => { toast({ title: "Time log approved" }); queryClient.invalidateQueries({ queryKey: ["project-timelogs"] }); },
+    onSuccess: () => { toast({ title: "Time log approved" }); queryClient.invalidateQueries({ queryKey: ["user-project-timelogs"] }); },
     onError: () => { toast({ title: "Failed", variant: "destructive" }); },
   });
 
   const rejectMutation = useMutation({
     mutationFn: (id: string) => projectServices.rejectTimeLog(id),
-    onSuccess: () => { toast({ title: "Time log rejected" }); queryClient.invalidateQueries({ queryKey: ["project-timelogs"] }); },
+    onSuccess: () => { toast({ title: "Time log rejected" }); queryClient.invalidateQueries({ queryKey: ["user-project-timelogs"] }); },
     onError: () => { toast({ title: "Failed", variant: "destructive" }); },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => projectServices.deleteTimeLog(id),
-    onSuccess: () => { toast({ title: "Deleted" }); queryClient.invalidateQueries({ queryKey: ["project-timelogs"] }); },
+    onSuccess: () => { toast({ title: "Deleted" }); queryClient.invalidateQueries({ queryKey: ["user-project-timelogs"] }); },
     onError: () => { toast({ title: "Failed", variant: "destructive" }); },
   });
 

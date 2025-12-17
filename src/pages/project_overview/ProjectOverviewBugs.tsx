@@ -52,7 +52,7 @@ const ProjectOverviewBugs = () => {
     enabled: !!currentProject?._id,
   });
 
-  // Build query params with project filter
+  // Build query params with project filter for user-specific bugs
   const buildQueryParams = useCallback(() => {
     return {
       page,
@@ -61,16 +61,16 @@ const ProjectOverviewBugs = () => {
     };
   }, [page, rowsPerPage, currentProject?._id]);
 
-  // Fetch bugs for this specific project
+  // Fetch user-specific bugs for this project
   const {
     data: bugsData,
     isLoading: bugsLoading,
     refetch: refetchBugs,
   } = useQuery({
-    queryKey: ["project-bugs", currentProject?._id, page, rowsPerPage],
+    queryKey: ["user-project-bugs", currentProject?._id, page, rowsPerPage],
     queryFn: async () => {
       const params = buildQueryParams();
-      const response = await projectServices.getBugs(params);
+      const response = await projectServices.getUserBugs(params);
       return response.data;
     },
     enabled: !!currentProject?._id,
@@ -80,7 +80,7 @@ const ProjectOverviewBugs = () => {
     mutationFn: (id: string) => projectServices.deleteBug(id),
     onSuccess: () => {
       toast({ title: "Bug deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: ["project-bugs"] });
+      queryClient.invalidateQueries({ queryKey: ["user-project-bugs"] });
     },
     onError: () => {
       toast({ title: "Failed to delete bug", variant: "destructive" });

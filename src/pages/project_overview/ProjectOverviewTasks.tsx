@@ -50,7 +50,7 @@ const ProjectOverviewTasks = () => {
     enabled: !!currentProject?._id,
   });
 
-  // Fetch tasks for this specific project
+  // Fetch user-specific tasks for this project
   const {
     data: tasksData,
     fetchNextPage,
@@ -59,14 +59,14 @@ const ProjectOverviewTasks = () => {
     isLoading: tasksLoading,
     refetch: refetchTasks,
   } = useInfiniteQuery({
-    queryKey: ["project-tasks", currentProject?._id],
+    queryKey: ["user-project-tasks", currentProject?._id],
     queryFn: async ({ pageParam = 1 }) => {
       const params = { 
-        page: pageParam, 
+        page: pageParam,
         limit: 30,
-        project_id: currentProject?._id 
+        project_id: currentProject?._id
       };
-      const response = await projectServices.getTasks(params);
+      const response = await projectServices.getUserTasks(params);
       return response.data;
     },
     getNextPageParam: (lastPage) => {
@@ -80,7 +80,7 @@ const ProjectOverviewTasks = () => {
     mutationFn: (id: string) => projectServices.deleteTask(id),
     onSuccess: () => {
       toast({ title: "Task deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: ["project-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["user-project-tasks"] });
     },
     onError: () => {
       toast({ title: "Failed to delete task", variant: "destructive" });

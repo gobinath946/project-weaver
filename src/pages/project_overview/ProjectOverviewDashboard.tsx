@@ -41,7 +41,7 @@ const ProjectOverviewDashboard = () => {
   );
 
   const { data: overview, isLoading, error } = useQuery({
-    queryKey: ["project-overview", currentProject?._id],
+    queryKey: ["user-project-overview", currentProject?._id],
     queryFn: async () => {
       const response = await projectServices.getProjectOverview(currentProject!._id);
       if (response.data.success) {
@@ -49,6 +49,39 @@ const ProjectOverviewDashboard = () => {
       } else {
         throw new Error(response.data.message || 'Failed to fetch project');
       }
+    },
+    enabled: !!currentProject?._id,
+  });
+
+  // Fetch user-specific tasks for this project
+  const { data: userTasks } = useQuery({
+    queryKey: ["user-project-tasks-count", currentProject?._id],
+    queryFn: async () => {
+      const response = await projectServices.getUserTasks({ project_id: currentProject?._id });
+      return response.data.data;
+    },
+    enabled: !!currentProject?._id,
+  });
+
+  // Fetch user-specific bugs for this project
+  const { data: userBugs } = useQuery({
+    queryKey: ["user-project-bugs-count", currentProject?._id],
+    queryFn: async () => {
+      const response = await projectServices.getUserBugs({ project_id: currentProject?._id });
+      return response.data.data;
+    },
+    enabled: !!currentProject?._id,
+  });
+
+  // Fetch user-specific time logs for this project
+  const { data: userTimeLogs } = useQuery({
+    queryKey: ["user-project-timelogs-count", currentProject?._id],
+    queryFn: async () => {
+      const response = await projectServices.getTimeLogs({ 
+        project_id: currentProject?._id,
+        limit: 1000 // Get all to count
+      });
+      return response.data.data;
     },
     enabled: !!currentProject?._id,
   });
@@ -109,10 +142,29 @@ const ProjectOverviewDashboard = () => {
     return 'Untitled Project';
   };
 
-  const totalTasks = taskBreakdown.reduce((sum: number, item: any) => sum + item.count, 0);
-  const completedTasks = taskBreakdown.find((item: any) => item._id === "Completed")?.count || 0;
-  const totalBugs = bugBreakdown.reduce((sum: number, item: any) => sum + item.count, 0);
-  const closedBugs = bugBreakdown.find((item: any) => item._id === "Closed")?.count || 0;
+  // Calculate user-specific counts
+  const totalTasks = userTasks?.length || 0;
+  const completedTasks = userTasks?.filter((task: any) => task.status === "Completed")?.length || 0;
+  const totalBugs = userBugs?.length || 0;
+  const closedBugs = userBugs?.filter((bug: any) => bug.status === "Closed")?.length || 0;
+  const totalTimeLogs = userTimeLogs?.length || 0;
+
+  // Create user-specific breakdowns
+  const userTaskBreakdown = userTasks ? 
+    Object.entries(
+      userTasks.reduce((acc: any, task: any) => {
+        acc[task.status] = (acc[task.status] || 0) + 1;
+        return acc;
+      }, {})
+    ).map(([status, count]) => ({ _id: status, count })) : [];
+
+  const userBugBreakdown = userBugs ? 
+    Object.entries(
+      userBugs.reduce((acc: any, bug: any) => {
+        acc[bug.status] = (acc[bug.status] || 0) + 1;
+        return acc;
+      }, {})
+    ).map(([status, count]) => ({ _id: status, count })) : [];
 
   return (
     <DashboardLayout title={getProjectTitle()}>
@@ -260,7 +312,7 @@ const ProjectOverviewDashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Time Logs</p>
-                <p className="text-2xl font-bold">{overview?.user_time_logs?.length || 0}</p>
+                <p className="text-2xl font-bold">{totalTimeLogs}</p>
               </div>
             </CardContent>
           </Card>
@@ -273,11 +325,11 @@ const ProjectOverviewDashboard = () => {
               <CardTitle className="text-lg">Task Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
-              {taskBreakdown.length === 0 ? (
+              {userTaskBreakdown.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No tasks assigned</p>
               ) : (
                 <div className="space-y-2">
-                  {taskBreakdown.map((item: any) => (
+                  {userTaskBreakdown.map((item: any) => (
                     <div key={item._id} className="flex items-center justify-between p-2 rounded-lg border">
                       <span className="text-sm">{item._id}</span>
                       <Badge variant="outline">{item.count}</Badge>
@@ -293,11 +345,11 @@ const ProjectOverviewDashboard = () => {
               <CardTitle className="text-lg">Bug Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
-              {bugBreakdown.length === 0 ? (
+              {userBugBreakdown.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No bugs assigned</p>
               ) : (
                 <div className="space-y-2">
-                  {bugBreakdown.map((item: any) => (
+                  {userBugBreakdown.map((item: any) => (
                     <div key={item._id} className="flex items-center justify-between p-2 rounded-lg border">
                       <span className="text-sm">{item._id}</span>
                       <Badge variant="outline">{item.count}</Badge>
